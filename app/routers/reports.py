@@ -32,6 +32,7 @@ MODULE_LABEL = {
 
 
 def _build_pdf(pet: PetProfile, records: list, vaccines: list) -> bytes:
+    import os
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import cm
@@ -40,11 +41,25 @@ def _build_pdf(pet: PetProfile, records: list, vaccines: list) -> bytes:
         SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable,
     )
     from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+    from reportlab.pdfbase.ttfonts import TTFont
 
-    # 注册支持中文的字体
-    pdfmetrics.registerFont(UnicodeCIDFont("STSong-Light"))
-    CN = "STSong-Light"
+    # 注册支持中文的 TTF 字体（优先使用打包字体，备用系统字体）
+    _FONT_NAME = "NotoSansSC"
+    _fonts_dir = os.path.join(os.path.dirname(__file__), "..", "fonts")
+    _candidates = [
+        os.path.join(_fonts_dir, "NotoSansSC.ttf"),
+        "/usr/share/fonts/truetype/noto/NotoSansSC-Regular.ttf",
+        "C:/Windows/Fonts/NotoSansSC-VF.ttf",
+        "C:/Windows/Fonts/simhei.ttf",
+        "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+    ]
+    _font_path = next((p for p in _candidates if os.path.exists(p)), None)
+    if _font_path is None:
+        raise RuntimeError("找不到可用的中文字体文件，请在 backend/app/fonts/ 目录下放置 NotoSansSC.ttf")
+
+    if _FONT_NAME not in pdfmetrics.getRegisteredFontNames():
+        pdfmetrics.registerFont(TTFont(_FONT_NAME, _font_path))
+    CN = _FONT_NAME
 
     buf = BytesIO()
     doc = SimpleDocTemplate(
