@@ -1,21 +1,21 @@
 /**
- * diagnosisService.ts — AI 宠物健康诊断服务
+ * diagnosisService.ts — AI 반려동물 건강 진단 서비스
  *
- * 架构设计：
- *   1. 本地紧急触发器 ── blood_ratio > 0.05 立即报警，不等待 AI 返回
- *   2. 结构化诊断输出 ── primary_diagnosis / symptoms / urgency / action_plan / home_care
- *   3. Knowledge Anchoring ── 每个模块携带专属候选诊断词库，强制模型引用专业术语
- *   4. 眼部多图逻辑 ── 一次性发送全景图 + 左眼 + 右眼三张图
- *   5. Mock 模式 ── 无需 API Key，延迟 1.5 s 返回符合格式的模拟数据
+ * 아키텍처 설계：
+ *   1. 로컬 응급 트리거 ── blood_ratio > 0.05 즉시 경보, AI 응답 대기 없음
+ *   2. 구조화 진단 출력 ── primary_diagnosis / symptoms / urgency / action_plan / home_care
+ *   3. Knowledge Anchoring ── 각 모듈별 후보 진단 어휘집 탑재, 전문 용어 인용 강제
+ *   4. 눈 모듈 다중 이미지 ── 전경 + 왼눈 + 오른눈 3장 일괄 전송
+ *   5. Mock 모드 ── API Key 없이 1.5초 후 형식에 맞는 모의 데이터 반환
  *
- * 环境变量：
- *   EXPO_PUBLIC_QWEN_API_KEY — 阿里云百炼国际版 API Key
- *   若未设置，自动降级到 mockDiagnose。
+ * 환경 변수：
+ *   EXPO_PUBLIC_QWEN_API_KEY — 알리클라우드 바이리엔 국제판 API Key
+ *   미설정 시 자동으로 mockDiagnose로 강등.
  */
 
 import * as ImageManipulator from "expo-image-manipulator";
 
-// ── 公共类型 ─────────────────────────────────────────────────
+// ── 공통 타입 ─────────────────────────────────────────────────
 
 export type ModuleKey =
   | "skin"
@@ -25,114 +25,114 @@ export type ModuleKey =
   | "excrement"
   | "vomit";
 
-/** 单条症状（结构化） */
+/** 단일 증상（구조화） */
 export interface Symptom {
-  /** 症状名称，优先来自候选词库 */
+  /** 증상명, 후보 어휘집 용어 우선 사용 */
   name: string;
-  /** 严重程度 */
-  severity: "轻度" | "中度" | "重度";
-  /** 具体位置，如「右眼结膜」 */
+  /** 중증도 */
+  severity: "경증" | "중등증" | "중증";
+  /** 구체적 위치, 예：「우안 결막」 */
   location: string;
-  /** 视觉证据描述，20字以内 */
+  /** 시각적 증거 설명, 20자 이내 */
   evidence: string;
 }
 
-/** 诊断输入参数 */
+/** 진단 입력 파라미터 */
 export interface DiagnosisInput {
   module: ModuleKey;
   /**
-   * 裁切后的图片 URI 列表。
-   * 普通模块传 1 个，眼部模块需传 3 个：[全景, 左眼, 右眼]
+   * 크롭된 이미지 URI 목록.
+   * 일반 모듈：1장, 눈 모듈：3장 [전경, 왼눈, 오른눈]
    */
   imageUris: string[];
   /**
-   * 预计算的血迹像素占比（0–1）。
-   * 若超过 0.05，在调用 API 前立即触发紧急报警。
+   * 사전 계산된 혈흔 픽셀 비율（0–1）.
+   * 0.05 초과 시 API 호출 전 즉시 응급 경보 트리거.
    */
   blood_ratio?: number;
 }
 
-/** 诊断输出结果 */
+/** 진단 출력 결과 */
 export interface DiagnosisResult {
   module: ModuleKey;
 
-  // ── 结构化诊断字段（新增）──────────────────────────────────
-  /** 主诊断名称，优先来自候选词库 */
+  // ── 구조화 진단 필드 ──────────────────────────────────────
+  /** 주진단명, 후보 어휘집 용어 우선 사용 */
   primary_diagnosis: string;
-  /** AI 置信度定性 */
-  confidence_level: "高" | "中" | "低";
-  /** 判断依据，简短罗列关键视觉证据 */
+  /** AI 신뢰도 정성 */
+  confidence_level: "높음" | "보통" | "낮음";
+  /** 판단 근거, 주요 시각적 증거 나열 */
   reasoning: string;
-  /** 症状列表，含严重程度；无异常时为空数组 */
+  /** 증상 목록（중증도 포함）; 이상 없을 경우 빈 배열 */
   symptoms: Symptom[];
-  /** 紧迫程度：正常/注意/就医/紧急（紧急仅由本地规则触发） */
-  urgency: "正常" | "注意" | "就医" | "紧急";
-  /** 行动建议，80-120字 */
+  /** 긴박도：정상/주의/내원필요/긴급（긴급은 로컬 규칙으로만 트리거） */
+  urgency: "정상" | "주의" | "내원필요" | "긴급";
+  /** 행동 권고, 80–120자 */
   action_plan: string;
-  /** 居家护理建议，50-80字 */
+  /** 가정 간호 권고, 50–80자 */
   home_care: string;
 
-  // ── 保留字段（兼容旧 UI / 本地规则输出）────────────────────
-  /** 健康评分 0–100，由 urgency 计算 */
+  // ── 보존 필드（구 UI / 로컬 규칙 출력 호환）────────────────
+  /** 건강 점수 0–100, urgency로 계산 */
   health_score: number;
-  /** 炎症评分，由 symptoms severity 计算 */
+  /** 염증 점수, symptoms severity로 계산 */
   inflammation_score: number;
-  /** 红色通道偏差量，保留用于数值展示 */
+  /** 적색 채널 편차량, 수치 표시용 보존 */
   redness_delta: number;
-  /** 对称性评分 0–1，仅眼部模块返回 */
+  /** 대칭성 점수 0–1, 눈 모듈만 반환 */
   asymmetry_score?: number;
-  /** 血迹像素占比 0–1 */
+  /** 혈흔 픽셀 비율 0–1 */
   blood_ratio: number;
-  /** 异常描述列表，由 symptoms 提取 */
+  /** 이상 설명 목록, symptoms에서 추출 */
   anomalies: string[];
-  /** 内容物成分列表，仅呕吐物 / 粪便模块 */
+  /** 내용물 성분 목록, 구토물/분변 모듈만 */
   content_findings?: string[];
-  /** 诊断置信度 0–1，由 confidence_level 计算 */
+  /** 진단 신뢰도 0–1, confidence_level로 계산 */
   confidence: number;
-  /** 等同于 action_plan，保留给旧 UI */
+  /** action_plan과 동일, 구 UI 호환 */
   advice: string;
   severity: "normal" | "caution" | "visit" | "emergency";
   is_emergency: boolean;
   /**
-   * true = 内容安全审核拦截后自动降级为 Mock 参考结果。
-   * UI 层可据此显示「参考模式」提示。
+   * true = 콘텐츠 안전 심사 차단 후 자동 Mock 참고 결과로 강등.
+   * UI 레이어에서 「참고 모드」 표시에 사용.
    */
   is_content_filtered?: boolean;
 }
 
-// ── 配置 ─────────────────────────────────────────────────────
+// ── 설정 ─────────────────────────────────────────────────────
 
 const API_KEY  = process.env.EXPO_PUBLIC_QWEN_API_KEY;
 const API_URL  = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
 const API_MODEL = "qwen-vl-max";
 const BLOOD_RATIO_THRESHOLD = 0.05;
 
-// ── 辅助转换 ──────────────────────────────────────────────────
+// ── 보조 변환 함수 ──────────────────────────────────────────────
 
 function urgencyToHealthScore(u: string): number {
-  if (u === "正常") return 90;
-  if (u === "注意") return 65;
-  if (u === "就医") return 35;
-  return 8; // 紧急
+  if (u === "정상") return 90;
+  if (u === "주의") return 65;
+  if (u === "내원필요") return 35;
+  return 8; // 긴급
 }
 
 function urgencyToSeverity(u: string): "normal" | "caution" | "visit" | "emergency" {
-  if (u === "正常") return "normal";
-  if (u === "注意") return "caution";
-  if (u === "就医") return "visit";
+  if (u === "정상") return "normal";
+  if (u === "주의") return "caution";
+  if (u === "내원필요") return "visit";
   return "emergency";
 }
 
 function confidenceLevelToNumber(level: string): number {
-  if (level === "高") return 0.90;
-  if (level === "中") return 0.70;
+  if (level === "높음") return 0.90;
+  if (level === "보통") return 0.70;
   return 0.45;
 }
 
 function symptomsToInflammationScore(symptoms: Symptom[]): number {
   if (symptoms.length === 0) return 0;
   return symptoms.reduce((max, s) => {
-    const v = s.severity === "重度" ? 82 : s.severity === "中度" ? 52 : 22;
+    const v = s.severity === "중증" ? 82 : s.severity === "중등증" ? 52 : 22;
     return Math.max(max, v);
   }, 0);
 }
@@ -145,15 +145,15 @@ function symptomsToAnomalies(symptoms: Symptom[]): string[] {
   );
 }
 
-/** 将所有新字段 + 计算字段合并为完整 DiagnosisResult */
+/** 모든 신규 필드 + 계산 필드를 완전한 DiagnosisResult로 합산 */
 function buildFullResult(
   module: ModuleKey,
   data: {
     primary_diagnosis: string;
-    confidence_level: "高" | "中" | "低";
+    confidence_level: "높음" | "보통" | "낮음";
     reasoning: string;
     symptoms: Symptom[];
-    urgency: "正常" | "注意" | "就医" | "紧急";
+    urgency: "정상" | "주의" | "내원필요" | "긴급";
     action_plan: string;
     home_care: string;
     asymmetry_score?: number;
@@ -162,7 +162,7 @@ function buildFullResult(
   },
   is_emergency = false,
 ): DiagnosisResult {
-  const urgency = is_emergency ? "紧急" : data.urgency;
+  const urgency = is_emergency ? "긴급" : data.urgency;
   return {
     module,
     primary_diagnosis:  data.primary_diagnosis,
@@ -172,7 +172,7 @@ function buildFullResult(
     urgency,
     action_plan:        data.action_plan,
     home_care:          data.home_care,
-    // 计算型保留字段
+    // 계산형 보존 필드
     health_score:       is_emergency ? 8 : urgencyToHealthScore(data.urgency),
     inflammation_score: symptomsToInflammationScore(data.symptoms),
     redness_delta:      40,
@@ -187,7 +187,7 @@ function buildFullResult(
   };
 }
 
-// ── 本地紧急触发器 ────────────────────────────────────────────
+// ── 로컬 응급 트리거 ────────────────────────────────────────────
 
 function isLocalEmergency(bloodRatio: number): boolean {
   return bloodRatio > BLOOD_RATIO_THRESHOLD;
@@ -197,20 +197,20 @@ function buildEmergencyResult(module: ModuleKey, bloodRatio: number): DiagnosisR
   return buildFullResult(
     module,
     {
-      primary_diagnosis: "疑似活动性出血",
-      confidence_level:  "高",
-      reasoning:         `图像血迹像素占比 ${(bloodRatio * 100).toFixed(1)}%，超过安全阈值（5%）`,
+      primary_diagnosis: "활동성 출혈 의심",
+      confidence_level:  "높음",
+      reasoning:         `이미지 혈흔 픽셀 비율 ${(bloodRatio * 100).toFixed(1)}%，안전 임계값（5%）초과`,
       symptoms: [
         {
-          name:     "血迹",
-          severity: "重度",
-          location: "图像主体区域",
-          evidence: `血迹像素占比 ${(bloodRatio * 100).toFixed(1)}%`,
+          name:     "혈흔",
+          severity: "중증",
+          location: "이미지 주요 영역",
+          evidence: `혈흔 픽셀 비율 ${(bloodRatio * 100).toFixed(1)}%`,
         },
       ],
-      urgency:      "紧急",
-      action_plan:  "图像中检测到明显血迹，占比超过安全阈值（5%）。请立即前往最近的动物医院急诊，不要等待。",
-      home_care:    "就医途中保持宠物安静，用干净布料轻压伤口，避免宠物舔舐患处。",
+      urgency:      "긴급",
+      action_plan:  "이미지에서 명백한 혈흔이 감지되었으며 안전 임계값（5%）을 초과했습니다. 즉시 가까운 동물병원 응급실로 이동하세요. 기다리지 마세요.",
+      home_care:    "내원 중에는 반려동물을 안정시키고, 깨끗한 천으로 상처를 가볍게 압박하며, 반려동물이 환부를 핥지 않도록 하세요.",
       blood_ratio:  bloodRatio,
     },
     true,
@@ -228,17 +228,17 @@ function buildSystemPrompt(): string {
 
 {
   "primary_diagnosis": "<한국어로 주요 진단명 — 【후보 진단 어휘집】 용어 우선 사용; 이상 없을 경우 「전반적으로 양호」>",
-  "confidence": "<高/中/低>",
+  "confidence": "<높음/보통/낮음>",
   "reasoning": "<한국어로 판단 근거 — 주요 시각적 증거 나열, 50자 이내>",
   "symptoms": [
     {
       "name": "<한국어로 증상명 — 후보 어휘집 용어 우선 사용>",
-      "severity": "<轻度/中度/重度>",
+      "severity": "<경증/중등증/중증>",
       "location": "<한국어로 구체적 위치, 예: 「우안 결막」 「좌측 귓바퀴」>",
       "evidence": "<한국어로 시각적 증거, 20자 이내>"
     }
   ],
-  "urgency": "<正常/注意/就医>",
+  "urgency": "<정상/주의/내원필요>",
   "action_plan": "<한국어로 행동 권고 — 80~120자, 부드럽고 구체적으로>",
   "home_care": "<한국어로 가정 간호 권고 — 50~80자, 쉽고 실행 가능하게>",
   "content_findings": ["<한국어로 내용물 설명1>", "<한국어로 내용물 설명2>"],
@@ -247,12 +247,12 @@ function buildSystemPrompt(): string {
 
 규칙:
 - primary_diagnosis, reasoning, action_plan, home_care, symptoms[].name/location/evidence, content_findings 는 반드시 한국어로 작성
-- urgency, confidence, symptoms[].severity 는 열거형 값을 그대로 사용: urgency(正常/注意/就医), confidence(高/中/低), severity(轻度/中度/重度)
+- urgency 는 세 가지 값만 허용: 정상(처치 불필요) / 주의(가정 관찰) / 내원필요(병원 필요)
+  「긴급」은 로컬 규칙으로만 트리거되므로 출력에 포함 금지
+- confidence 허용값: 높음(명확한 시각적 증거 다수) / 보통(불확실하거나 증거 1개) / 낮음(이미지 품질 불량)
+- severity 허용값: 경증 / 중등증 / 중증
 - symptoms 이상 없을 경우 빈 배열 []
-- urgency 는 세 가지 값만 허용: 正常(처치 불필요) / 注意(가정 관찰) / 就医(병원 필요)
-  「紧急」은 로컬 규칙으로만 트리거되므로 출력에 포함 금지
-- confidence: 高=명확한 시각적 증거 다수 | 中=불확실하거나 증거 1개 | 低=이미지 품질 불량
-- 이미지 품질 불량 시 confidence 는 「低」로, action_plan 에 재촬영 권장 문구 포함
+- 이미지 품질 불량 시 confidence 는 「낮음」으로, action_plan 에 재촬영 권장 문구 포함
 - primary_diagnosis 와 symptoms[].name 은 사용자 메시지의 【후보 진단 어휘집】 용어 우선 인용
 - content_findings 는 배설물/구토물 모듈에만 작성, 나머지 모듈은 이 필드 생략
 - asymmetry_score 는 눈 모듈에만 작성(0=완전 대칭), 나머지 모듈은 이 필드 생략
@@ -260,7 +260,7 @@ function buildSystemPrompt(): string {
 반드시 한국어로 답변하세요. 진단 결과, 증상, 행동 권고, 가정 간호 내용을 모두 한국어로 작성하세요.`;
 }
 
-// ── 模块 User Prompt（含 Knowledge Anchoring）─────────────────
+// ── 모듈별 User Prompt（Knowledge Anchoring 포함）─────────────────
 
 function buildUserPrompt(module: ModuleKey): string {
   const modulePrompts: Record<ModuleKey, string> = {
@@ -275,8 +275,8 @@ function buildUserPrompt(module: ModuleKey): string {
 5. 【안검】 내번, 외번, 안검연염, 속눈썹 난생증 여부
 
 【후보 진단 어휘집】primary_diagnosis와 symptoms[].name은 반드시 아래 용어 중에서 우선 인용하세요（원문 그대로 사용）：
-대분류 참고：角膜疾病 | 结膜和巩膜疾病 | 眼睑疾病 | 第三眼睑疾病 | 泪液分泌异常 | 虹膜和瞳孔疾病 | 晶状体疾病 | 眼压相关疾病 | 分泌物异常
-용어：角膜浑浊、角膜溃疡、角膜炎、角膜黑色素沉着、角膜白斑、结膜炎、巩膜充血、结膜水肿、睑内翻、睑外翻、眼睑炎、眼睑肿瘤、樱桃眼、第三眼睑增生、流泪症、干眼症、虹膜炎、瞳孔异常、虹膜异色、白内障、晶状体脱位、核硬化、青光眼、眼球内陷、眼球突出、健康眼睛、其他眼部状况`,
+대분류 참고：각막질환 | 결막및공막질환 | 안검질환 | 제3안검질환 | 눈물분비이상 | 홍채및동공질환 | 수정체질환 | 안압관련질환 | 분비물이상
+용어：각막혼탁、각막궤양、각막염、각막흑색소침착、각막백반、결막염、공막충혈、결막부종、안검내번、안검외번、안검염、안검종양、체리아이、제3안검증생、유루증、건성안、홍채염、동공이상、홍채이색증、백내장、수정체탈구、핵경화、녹내장、안구함몰、안구돌출、건강한 눈、기타 안구 이상`,
 
     oral: `아래 구강 이미지를 분석해 주세요.
 
@@ -288,7 +288,7 @@ function buildUserPrompt(module: ModuleKey): string {
 5. 【구취 간접 평가】 치석량과 염증 소견을 통한 간접 추정
 
 【후보 진단 어휘집】primary_diagnosis와 symptoms[].name은 반드시 아래 용어 중에서 우선 인용하세요（원문 그대로 사용）：
-용어：牙周炎、牙结石、牙垢、牙龈红肿、牙龈炎、牙齿缺失、牙齿磨损、牙齿变色、龋齿、牙齿裂纹、牙龈萎缩、牙釉质发育不全、口腔肿瘤`,
+용어：치주염、치석、치태、치은충혈및부종、치은염、치아결손、치아마모、치아변색、충치、치아균열、치은퇴축、법랑질형성부전、구강종양`,
 
     skin: `아래 피부/피모 이미지를 분석해 주세요.
 
@@ -301,8 +301,8 @@ function buildUserPrompt(module: ModuleKey): string {
 6. 【혈흔 또는 삼출액】 혈흔 비율
 
 【후보 진단 어휘집】primary_diagnosis와 symptoms[].name은 반드시 아래 용어 중에서 우선 인용하세요（원문 그대로 사용）：
-대분류 참고：真菌类 | 寄生虫类 | 细菌类 | 过敏免疫类
-용어：癣、马拉色菌感染、疥癣、蠕形螨病、耳螨、蜱虫感染、跳蚤过敏性皮炎、细菌性皮炎、毛囊炎、过敏性皮炎、特应性皮炎、热点、脂溢性皮炎、健康皮肤、其他`,
+대분류 참고：진균류 | 기생충류 | 세균류 | 알레르기면역류
+용어：피부사상균증、말라세지아감염、개선충증、모낭충증、귀진드기、진드기감염、벼룩알레르기피부염、세균성피부염、모낭염、알레르기성피부염、아토피피부염、핫스팟、지루성피부염、건강한 피부、기타`,
 
     ear: `아래 귀 이미지를 분석해 주세요.
 
@@ -314,8 +314,8 @@ function buildUserPrompt(module: ModuleKey): string {
 5. 【혈흔 및 삼출액】 혈흔 비율
 
 【후보 진단 어휘집】primary_diagnosis와 symptoms[].name은 반드시 아래 용어 중에서 우선 인용하세요（원문 그대로 사용）：
-대분류 참고：细菌性感染 | 真菌性感染 | 过敏性耳炎 | 寄生虫性耳炎
-용어：球菌感染、杆菌感染、马拉色菌感染、耳真菌病、过敏性耳炎、耳螨、蠕形螨、疥螨、耳道增生、耳道异物、鼓膜破裂、耳道狭窄、健康耳道、其他耳道状况`,
+대분류 참고：세균성감염 | 진균성감염 | 알레르기성외이염 | 기생충성외이염
+용어：구균감염、간균감염、말라세지아감염、외이도진균증、알레르기성외이염、귀진드기、모낭충、개선충、외이도증식、외이도이물、고막파열、외이도협착、건강한 귀、기타 귀 이상`,
 
     excrement: `아래 분변 이미지를 분석하여 내용물 성분（content_findings）을 상세히 파악해 주세요.
 
@@ -347,7 +347,7 @@ content_findings에 발견된 내용물을 항목별로 나열하세요.`,
   return modulePrompts[module] + KO_SUFFIX;
 }
 
-// ── 图片转 Base64 ─────────────────────────────────────────────
+// ── 이미지 Base64 변환 ─────────────────────────────────────────
 
 async function uriToBase64(uri: string): Promise<string> {
   const result = await ImageManipulator.manipulateAsync(
@@ -360,112 +360,112 @@ async function uriToBase64(uri: string): Promise<string> {
     },
   );
   if (!result.base64) {
-    throw new Error(`[diagnosisService] 图片转 Base64 失败: ${uri}`);
+    throw new Error(`[diagnosisService] 이미지 Base64 변환 실패: ${uri}`);
   }
   return result.base64;
 }
 
-// ── Mock 诊断数据 ─────────────────────────────────────────────
+// ── Mock 진단 데이터 ─────────────────────────────────────────────
 
 type MockData = Parameters<typeof buildFullResult>[1];
 
 const MOCK_DATA: Record<ModuleKey, MockData> = {
   eye: {
-    primary_diagnosis: "结膜炎",
-    confidence_level:  "中",
-    reasoning:         "右眼结膜充血，分泌物量多于左眼，左右轻度不对称（asymmetry 0.18）",
+    primary_diagnosis: "결막염",
+    confidence_level:  "보통",
+    reasoning:         "우안 결막 충혈, 분비물량 좌안 대비 증가, 경도 좌우 비대칭（asymmetry 0.18）",
     symptoms: [
-      { name: "结膜炎", severity: "轻度", location: "右眼结膜", evidence: "轻度充血，水样分泌物增多" },
-      { name: "流泪症", severity: "轻度", location: "右眼内角", evidence: "分泌物量略多于左眼" },
+      { name: "결막염", severity: "경증", location: "우안 결막", evidence: "경도 충혈, 수양성 분비물 증가" },
+      { name: "유루증", severity: "경증", location: "우안 내안각", evidence: "분비물량 좌안 대비 소량 증가" },
     ],
-    urgency:      "注意",
-    action_plan:  "右眼发现轻微充血，可能为过敏或轻度结膜炎所致。左右眼存在轻度不对称。建议观察3-5天，每天用湿润棉球由眼角向外轻柔擦拭分泌物。若充血加重、分泌物变黄绿色或宠物频繁抓眼，请及时就诊。",
-    home_care:    "每天用湿润棉球从眼角向外擦拭，避免宠物抓眼，观察左右对比变化。",
+    urgency:      "주의",
+    action_plan:  "우안에서 경미한 충혈이 발견되었으며, 알레르기 또는 경도 결막염으로 추정됩니다. 좌우 눈에 경미한 비대칭이 있습니다. 3–5일간 관찰하며 매일 습윤한 면봉으로 눈 안쪽에서 바깥쪽으로 분비물을 닦아 주세요. 충혈이 악화되거나 분비물이 황록색으로 변하거나 반려동물이 눈을 자주 긁는다면 즉시 내원하세요.",
+    home_care:    "매일 습윤한 면봉으로 눈 안쪽에서 바깥쪽으로 닦고, 반려동물이 눈을 긁지 않도록 하며, 좌우 변화를 관찰하세요.",
     asymmetry_score: 0.18,
     blood_ratio:  0.00,
   },
 
   oral: {
-    primary_diagnosis: "牙周炎",
-    confidence_level:  "高",
-    reasoning:         "牙石沉积明显（2-3级），牙龈充血红肿，边缘水肿，炎症中等偏重",
+    primary_diagnosis: "치주염",
+    confidence_level:  "높음",
+    reasoning:         "치석 침착 뚜렷（2–3등급）, 치은 충혈 및 부종, 연변부 부종, 중등도 이상 염증",
     symptoms: [
-      { name: "牙结石",  severity: "中度", location: "全口牙龈线",  evidence: "黄褐色硬质沉积，2-3级" },
-      { name: "牙龈炎",  severity: "中度", location: "牙龈边缘",    evidence: "充血红肿，轻度水肿" },
-      { name: "牙龈红肿", severity: "轻度", location: "下颌前齿区", evidence: "颜色偏红，触感偏软" },
+      { name: "치석",        severity: "중등증", location: "전악 치은선",   evidence: "황갈색 경성 침착, 2–3등급" },
+      { name: "치은염",      severity: "중등증", location: "치은 연변부",    evidence: "충혈 및 부종, 경도 부종" },
+      { name: "치은충혈및부종", severity: "경증", location: "하악 전치부",  evidence: "색 적색, 촉감 연약" },
     ],
-    urgency:      "就医",
-    action_plan:  "牙龈炎症中等偏重，牙石积累较多，是慢性牙周炎的早期信号。建议在兽医指导下进行超声洁牙，评估是否需要抗炎治疗。洁牙后定期复查，防止复发。",
-    home_care:    "每2天用宠物专用牙刷+宠物牙膏刷牙，辅以磨牙玩具或洁牙零食减缓牙石再沉积。避免高糖饮食。",
+    urgency:      "내원필요",
+    action_plan:  "치은 염증이 중등도 이상이며 치석이 상당량 축적되어 있어 만성 치주염의 초기 징후입니다. 수의사 지도 하에 초음파 스케일링을 시행하고 항염 치료 필요 여부를 평가받으세요. 스케일링 후 정기 재검진으로 재발을 방지하세요.",
+    home_care:    "이틀에 한 번 반려동물 전용 칫솔과 치약으로 양치하고, 덴탈 장난감이나 덴탈 간식으로 치석 재침착 속도를 늦추세요. 고당분 식이를 피하세요.",
     blood_ratio:  0.00,
   },
 
   skin: {
-    primary_diagnosis: "过敏性皮炎",
-    confidence_level:  "中",
-    reasoning:         "局部脱毛约2cm²伴皮肤轻微发红，无明显皮损或感染迹象",
+    primary_diagnosis: "알레르기성피부염",
+    confidence_level:  "보통",
+    reasoning:         "국소 탈모 약 2cm² 및 경미한 피부 발적, 뚜렷한 피부 병변 또는 감염 소견 없음",
     symptoms: [
-      { name: "过敏性皮炎", severity: "轻度", location: "局部皮肤", evidence: "小面积脱毛，轻微发红" },
+      { name: "알레르기성피부염", severity: "경증", location: "국소 피부", evidence: "소면적 탈모, 경미한 발적" },
     ],
-    urgency:      "注意",
-    action_plan:  "皮肤整体状态良好，发现局部小片脱毛伴轻微红肿，可能为接触性过敏或自舔引发。建议检查床垫、清洁产品是否有刺激成分，保持患处干燥。若脱毛面积扩大或出现破溃、结痂，需就诊进行皮肤刮片检查。",
-    home_care:    "保持患处干燥清洁，避免宠物舔舐，可使用宠物专用防舔颈圈。检查并更换低刺激性洗护产品。",
+    urgency:      "주의",
+    action_plan:  "피부 전반 상태는 양호하나 국소적 소면적 탈모 및 경미한 발적이 발견되었습니다. 접촉성 알레르기 또는 자기 핥기에 의한 것으로 추정됩니다. 침구·세정제 등 자극 성분 여부를 확인하고 환부를 건조하게 유지하세요. 탈모 면적이 확대되거나 삼출·가피가 생기면 피부 스크래핑 검사를 위해 내원하세요.",
+    home_care:    "환부를 건조하고 청결하게 유지하며, 반려동물이 핥지 않도록 넥칼라를 사용하세요. 저자극성 세정제로 교체하세요.",
     blood_ratio:  0.00,
   },
 
   ear: {
-    primary_diagnosis: "耳螨",
-    confidence_level:  "高",
-    reasoning:         "耳道棕黑色干燥颗粒状分泌物堆积，耳廓充血，符合耳螨感染典型特征",
+    primary_diagnosis: "귀진드기",
+    confidence_level:  "높음",
+    reasoning:         "이도 내 진한 갈색 건조 과립상 분비물 축적, 이개 충혈, 귀 진드기 감염 전형 소견",
     symptoms: [
-      { name: "耳螨",        severity: "中度", location: "双侧耳道",   evidence: "棕黑色颗粒状分泌物堆积" },
-      { name: "马拉色菌感染", severity: "轻度", location: "耳廓内侧",   evidence: "轻度充血，油脂分泌偏多" },
+      { name: "귀진드기",      severity: "중등증", location: "양측 이도",   evidence: "진한 갈색 과립상 분비물 축적" },
+      { name: "말라세지아감염", severity: "경증",   location: "이개 내측",   evidence: "경도 충혈, 피지 분비 과다" },
     ],
-    urgency:      "就医",
-    action_plan:  "耳道有较多棕色分泌物，颜色和质地高度提示耳螨感染。建议尽快就诊，由兽医确认并开具驱螨药物，需完整疗程（通常3-4周）防止复发。",
-    home_care:    "就诊前用宠物耳道清洁液轻柔按摩耳根后让宠物甩耳，避免棉签深插。若宠物频繁抓耳，可暂戴防抓颈圈。",
+    urgency:      "내원필요",
+    action_plan:  "이도에 갈색 분비물이 상당량 관찰되며, 색상과 성상이 귀 진드기 감염을 강하게 시사합니다. 빠른 시일 내 내원하여 수의사 확인 후 구충제를 처방받으세요. 완전한 치료 과정（통상 3–4주）을 지켜야 재발을 방지할 수 있습니다.",
+    home_care:    "내원 전 반려동물용 이도 세정액으로 귓바퀴 부근을 가볍게 마사지한 후 반려동물이 귀를 털도록 하세요. 면봉을 깊이 삽입하지 마세요. 자주 귀를 긁는다면 넥칼라를 임시 착용하세요.",
     blood_ratio:  0.00,
   },
 
   excrement: {
-    primary_diagnosis: "健康偏软便",
-    confidence_level:  "中",
-    reasoning:         "粪便偏软、颜色偏深棕，形态符合「健康偏软便」分级，无血迹及异物",
+    primary_diagnosis: "건강한 연변",
+    confidence_level:  "보통",
+    reasoning:         "분변 연변·색 진한 갈색, 형태는 「健康偏软便」 분류에 해당, 혈흔 및 이물질 없음",
     symptoms: [],
-    urgency:      "注意",
-    action_plan:  "粪便偏软且颜色偏深，可能与近期饮食变化、进食过快或轻度肠道应激有关。建议暂停零食，改喂清淡易消化饮食1-2天，确保充足饮水。若持续腹泻超过24小时，或出现血便、精神萎靡，请立即就诊。",
-    home_care:    "减少零食，提供清淡食物，多补充水分。记录排便频次和性状变化，作为就诊参考。",
+    urgency:      "주의",
+    action_plan:  "분변이 연하고 색이 짙어 최근 식이 변화, 과식 또는 경미한 장 자극과 관련될 수 있습니다. 간식을 일시 중단하고 소화가 잘 되는 담백한 식이로 1–2일 전환하며 충분한 수분을 제공하세요. 설사가 24시간 이상 지속되거나 혈변·기력 저하가 나타나면 즉시 내원하세요.",
+    home_care:    "간식을 줄이고 담백한 식이를 제공하며 수분을 충분히 보충하세요. 배변 횟수와 성상 변화를 기록해 내원 참고자료로 활용하세요.",
     blood_ratio:  0.01,
     content_findings: [
       "健康偏软便",
-      "颜色：深棕色（提示消化时间偏短）",
-      "质地：软便，轻度黏液覆盖",
-      "未见明显异物",
-      "未见可见寄生虫",
+      "색상：진한 갈색（소화 시간 짧음 시사）",
+      "성상：연변, 경미한 점액 피복",
+      "이물질 없음",
+      "육안적 기생충 없음",
     ],
   },
 
   vomit: {
-    primary_diagnosis: "进食过快导致呕吐",
-    confidence_level:  "高",
-    reasoning:         "呕吐物主要为未消化干粮，少量黄色胃液，无血迹及异物",
+    primary_diagnosis: "급식으로 인한 구토",
+    confidence_level:  "높음",
+    reasoning:         "구토물 주성분 미소화 건식사료, 소량 황색 위액, 혈흔 및 이물질 없음",
     symptoms: [],
-    urgency:      "注意",
-    action_plan:  "呕吐物主要为未消化食物，提示进食过快或一次进食量过多。建议改为少量多餐（每日3-4次），并使用防狼吞慢食碗。进食后30分钟内避免剧烈运动。若每日呕吐超过3次或出现血迹，请立即就诊。",
-    home_care:    "使用慢食碗，减少每次进食量，增加喂食频次。进食后让宠物安静休息30分钟。",
+    urgency:      "주의",
+    action_plan:  "구토물이 주로 미소화 음식물로 이루어져 있어 급식 또는 1회 과다 섭취를 시사합니다. 소량 다회 급여（1일 3–4회）로 전환하고 슬로우 피더볼을 사용하세요. 식후 30분간 격렬한 운동을 삼가세요. 1일 3회 이상 구토하거나 혈흔이 보이면 즉시 내원하세요.",
+    home_care:    "슬로우 피더볼을 사용하고 1회 급여량을 줄이며 급여 횟수를 늘리세요. 식후 30분간 반려동물이 조용히 쉬도록 하세요.",
     blood_ratio:  0.00,
     content_findings: [
-      "主要成分：未消化干粮颗粒（约70%）",
-      "少量黄色胃液（约30%）",
-      "未见血迹",
-      "未见异物（骨片、布料等）",
-      "未见可见寄生虫",
+      "주성분：미소화 건식사료 알갱이（약 70%）",
+      "소량 황색 위액（약 30%）",
+      "혈흔 없음",
+      "이물질 없음（골편, 직물 등）",
+      "육안적 기생충 없음",
     ],
   },
 };
 
 /**
- * mockDiagnose — 无需 API Key，1.5s 后返回符合格式的模拟结果。
+ * mockDiagnose — API Key 없이 1.5초 후 형식에 맞는 모의 결과 반환.
  */
 export async function mockDiagnose(input: DiagnosisInput): Promise<DiagnosisResult> {
   const bloodRatio = input.blood_ratio ?? 0;
@@ -476,7 +476,7 @@ export async function mockDiagnose(input: DiagnosisInput): Promise<DiagnosisResu
   return buildFullResult(input.module, { ...MOCK_DATA[input.module] });
 }
 
-// ── 真实 API 调用 ─────────────────────────────────────────────
+// ── 실제 API 호출 ─────────────────────────────────────────────
 
 export async function callDiagnose(input: DiagnosisInput): Promise<DiagnosisResult> {
   const bloodRatio = input.blood_ratio ?? 0;
@@ -514,18 +514,18 @@ export async function callDiagnose(input: DiagnosisInput): Promise<DiagnosisResu
   if (!response.ok) {
     const errText = await response.text();
 
-    // 阿里云内容安全审核拦截（常见于粪便、伤口、分泌物等医疗动物图片）
-    // 自动降级为 Mock 参考结果，避免用户看到纯错误页面
+    // 알리클라우드 콘텐츠 안전 심사 차단（분변, 상처, 분비물 등 의료 동물 이미지에서 빈발）
+    // 자동으로 Mock 참고 결과로 강등하여 사용자에게 순수 오류 화면을 노출하지 않음
     let isContentFiltered = false;
     try {
       const errJson = JSON.parse(errText);
       if (errJson?.error?.code === "data_inspection_failed") {
         isContentFiltered = true;
       }
-    } catch { /* errText 非 JSON，忽略 */ }
+    } catch { /* errText가 JSON이 아닌 경우 무시 */ }
 
     if (isContentFiltered) {
-      console.warn("[diagnosisService] 内容安全审核拦截，降级为 Mock 参考模式");
+      console.warn("[diagnosisService] 콘텐츠 안전 심사 차단, Mock 참고 모드로 강등");
       const mockResult = await mockDiagnose(input);
       return { ...mockResult, is_content_filtered: true };
     }
@@ -539,15 +539,15 @@ export async function callDiagnose(input: DiagnosisInput): Promise<DiagnosisResu
 }
 
 /**
- * diagnose — 主入口。
- * 有 API Key → 调用真实接口；无 Key → 自动降级到 mockDiagnose。
+ * diagnose — 메인 진입점.
+ * API Key 있으면 실제 API 호출; 없으면 자동으로 mockDiagnose로 강등.
  */
 export async function diagnose(input: DiagnosisInput): Promise<DiagnosisResult> {
   if (!API_KEY) return mockDiagnose(input);
   return callDiagnose(input);
 }
 
-// ── 解析工具 ──────────────────────────────────────────────────
+// ── 파싱 유틸리티 ──────────────────────────────────────────────
 
 function parseAPIResponse(
   rawText: string,
@@ -562,35 +562,35 @@ function parseAPIResponse(
     console.warn("[diagnosisService] Failed to parse API response:", rawText);
   }
 
-  // 解析 symptoms 数组
+  // symptoms 배열 파싱
   const rawSymptoms = Array.isArray(parsed.symptoms) ? parsed.symptoms : [];
   const symptoms: Symptom[] = (rawSymptoms as unknown[]).map((s) => {
     const obj = (s && typeof s === "object" ? s : {}) as Record<string, unknown>;
     return {
-      name:     typeof obj.name     === "string" ? obj.name     : "未知症状",
-      severity: (["轻度","中度","重度"].includes(obj.severity as string)
-        ? obj.severity : "轻度") as "轻度" | "中度" | "重度",
+      name:     typeof obj.name     === "string" ? obj.name     : "증상 미상",
+      severity: (["경증","중등증","중증"].includes(obj.severity as string)
+        ? obj.severity : "경증") as "경증" | "중등증" | "중증",
       location: typeof obj.location === "string" ? obj.location : "",
       evidence: typeof obj.evidence === "string" ? obj.evidence : "",
     };
   });
 
   const rawUrgency  = parsed.urgency as string;
-  const urgency     = (["正常","注意","就医"].includes(rawUrgency) ? rawUrgency : "注意") as "正常" | "注意" | "就医";
+  const urgency     = (["정상","주의","내원필요"].includes(rawUrgency) ? rawUrgency : "주의") as "정상" | "주의" | "내원필요";
 
   const rawConf     = parsed.confidence as string;
-  const confLevel   = (["高","中","低"].includes(rawConf) ? rawConf : "中") as "高" | "中" | "低";
+  const confLevel   = (["높음","보통","낮음"].includes(rawConf) ? rawConf : "보통") as "높음" | "보통" | "낮음";
 
   const bloodRatio  = clamp(Number((parsed.blood_ratio as number) ?? inputBloodRatio), 0, 1);
   const isEmerg     = isLocalEmergency(bloodRatio);
 
-  const actionPlan  = typeof parsed.action_plan === "string" ? parsed.action_plan : "请继续观察宠物状态，如有异常请及时就诊。";
+  const actionPlan  = typeof parsed.action_plan === "string" ? parsed.action_plan : "반려동물 상태를 지속 관찰하시고, 이상이 있으면 즉시 내원해 주세요.";
   const homeCare    = typeof parsed.home_care    === "string" ? parsed.home_care    : "";
 
   return buildFullResult(
     module,
     {
-      primary_diagnosis: typeof parsed.primary_diagnosis === "string" ? parsed.primary_diagnosis : "分析完成",
+      primary_diagnosis: typeof parsed.primary_diagnosis === "string" ? parsed.primary_diagnosis : "분석 완료",
       confidence_level:  confLevel,
       reasoning:         typeof parsed.reasoning === "string" ? parsed.reasoning : "",
       symptoms,
