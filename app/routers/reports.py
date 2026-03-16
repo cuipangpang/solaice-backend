@@ -210,9 +210,11 @@ async def generate_report(
     # 4. 生成 PDF
     pdf_bytes = _build_pdf(pet, list(records), list(vaccines))
 
+    from urllib.parse import quote
     filename = f"pet_health_report_{pet.name}.pdf"
+    filename_encoded = quote(filename, safe="")
     return StreamingResponse(
         BytesIO(pdf_bytes),
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename_encoded}"},
     )
