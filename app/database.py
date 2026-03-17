@@ -21,3 +21,8 @@ class Base(DeclarativeBase):
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session
+
+
+# NOTE: All ORM models (including chat_models) are registered with Base.metadata
+# by importing them via app.models.__init__ before any Base.metadata.create_all()
+# call.  The migrate_chat_tables.py script handles DDL for the chat tables.
