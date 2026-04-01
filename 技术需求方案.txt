@@ -1,0 +1,428 @@
+- 需求方案一阶段 使用Claude 的api
+    - 体况识别
+        - 口腔
+            
+            **ROI策略（基于TTcare披露+人脸分割论文迁移）**：
+            
+            ```
+            输入图 → MediaPipe FaceMesh（宠物适配版）OR 颜色阈值
+            → 检测嘴部区域bbox
+            → 裁剪口腔区域 + 25% padding
+            → 内部分割：分离牙龈(pink/red) vs 牙齿(white/yellow)
+            → 两区域分别送入特征提取
+            ```
+            
+            **图像处理流水线**：
+            
+            ```
+            ① 亮度检测：均值<60 → 拒绝（口腔内天然暗，阈值比其他模块低）
+            ② CLAHE（clipLimit=3.0，tileGridSize=8×8）→ 口腔暗部增强
+            ③ 白平衡校正（Von Kries法）→ 消除色温偏差
+            ④ 不做锐化（牙龈纹理放大会误判炎症）
+            ⑤ 牙龈/牙齿颜色分割 → 分区提取HSV特征
+            ```
+            
+            **量化特征**：
+            
+            ```json
+            {
+              "gum_color_hsv": [H, S, V],
+              "gum_pallor_score": 0.0-1.0,
+              "redness_delta": "相对正常粉色的偏红量",
+              "plaque_coverage_ratio": 0.0-1.0,
+              "plaque_color_grade": "none/yellow/brown/dark",
+              "ulcer_detected": true/false,
+              "moisture_score": 0.0-1.0,
+              "inflammation_score": 0.0-1.0
+            }
+            ```
+            
+            **发给VLM的包**：
+            
+            - 图①：口腔ROI + 25% padding（保留牙龈/嘴唇参考系）
+            - 图②：牙龈/牙齿分区标注叠加图（Grad-CAM风格，OpenCV生成）
+            - 量化JSON + 专业Prompt
+            
+            **关键设计**：图②是口腔模块独有的，让VLM和用户都能看到「AI关注的是哪颗牙」，建立信任。
+            
+            **估计延迟**：预处理250ms + VLM首Token 1.5s
+            
+        - 皮肤（双分支架构 分割+分类并行）-业内成熟
+            
+            **推荐架构（借鉴Nature 2025双分支论文）**：
+            
+            ```
+                                ┌─ 分割分支（定位病灶）
+            输入图 → 预处理 → 分叉
+                                └─ 分类分支（判断病灶类型）
+                                          ↓ 特征融合
+                                     最终诊断输出
+            ```
+            
+            **ROI策略（两种模式）**：
+            
+            ```
+            模式A（用户框选）：
+              用户画矩形 → Mask R-CNN精细分割（参考Scientific Reports 2025，IoU 99.93%）
+              → GrabCut后处理 → 提取病灶mask
+              → 裁剪：病灶区域 + 50% padding（必须保留周围正常皮肤）
+            
+            模式B（自动检测）：
+              颜色异常检测 → 找偏离surrounding皮肤基线的区域
+              → 候选区高亮 → 用户确认 → 进入模式A流程
+            ```
+            
+            **核心：颜色必须用相对值**：
+            
+            ```python
+            normal_ring = crop_surrounding_ring(img, lesion_bbox, ring_width=50px)
+            normal_baseline_hsv = cv2.mean(normal_ring, mask=None)
+            lesion_delta_h = lesion_mean_h - normal_baseline_hsv[0]  # 相对色相偏差
+            lesion_delta_s = lesion_mean_s - normal_baseline_hsv[1]  # 相对饱和度偏差
+            # 不用绝对RGB，因为橘猫和黑猫的正常皮肤色完全不同
+            ```
+            
+            **分类模型（中期自建）**：
+            
+            - EfficientNetB3（PMC 2024验证最优性价比）
+            - 训练数据：人类ISIC数据集迁移学习 + 收集宠物皮肤图微调
+            - 7类输出：正常/红斑/丘疹/溃疡/脱毛/结痂/色素异常
+            
+            **发给VLM的包**：
+            
+            - 图①：病灶区域 + 50% padding ROI
+            - 图②：分割mask叠加图（病灶描边 + Grad-CAM热力图）
+            - 量化JSON（颜色用相对偏差值，不用绝对RGB）
+            
+            **估计延迟**：预处理200ms + VLM首Token 1.5s
+            
+        - 耳道
+            
+            **ROI策略**：
+            
+            ```
+            检测耳廓形状（半圆形轮廓检测）
+            → 重点提取三个子区域：
+              A. 耳廓内侧皮肤（最大面积区域）
+              B. 外耳道入口（中心暗区）
+              C. 异常颜色区域（分泌物候选）
+            ```
+            
+            **颜色分级规则（分泌物颜色对应病因）**：
+            
+            ```
+            棕黑色 → 耳螨感染（最常见）
+            黄色脓性 → 细菌感染
+            深棕油性 → 马拉色菌（酵母菌）感染
+            血性红色 → 外伤/严重感染
+            无分泌物 → 正常或轻度问题
+            ```
+            
+            **odor字段设计**：
+            
+            ```json
+            {
+              "odor_detectable_from_image": false,
+              "ui_prompt": "请用鼻子在30cm距离嗅闻耳道：是否有酸臭味？",
+              "odor_guide": "正常：无味或微腥 | 异常：酸臭/甜腻/腐败"
+            }
+            ```
+            
+            **发给VLM的包**：
+            
+            - 图①：耳廓ROI + 30% padding
+            - 量化JSON（含odor提示字段）
+            - Prompt明确说明「无法观察鼓膜，仅评估外耳道可见区域」
+            
+            **估计延迟**：预处理150ms + VLM首Token 1.5s
+            
+        - 眼睛-业内成熟
+            
+            **两阶段架构（TTcare核心管线）**：
+            
+            ```
+            阶段1：眼部定位
+              MediaPipe FaceMesh（宠物版）→ 468个关键点
+              → 提取左右眼区域bbox
+              → 双眼全景裁剪（保留左右对比）
+              → 左/右眼分别裁剪（高分辨率细节）
+            
+            阶段2：眼部分割+分类（参考ScienceDirect 2024）
+              U-Net（EfficientNet backbone）→ 分割三区域：
+                - 巩膜（眼白）
+                - 虹膜+瞳孔
+                - 眼睑（上下）
+              EfficientNet-B0 → 分类：
+                正常/角膜炎/结膜炎/白内障/角膜溃疡（参考Kim 2019三级分类）
+            ```
+            
+            **左右对比是诊断核心（行业共识）**：
+            
+            ```python
+            asymmetry_score = {
+                "size_diff": abs(left_pupil_area - right_pupil_area) / avg_pupil_area,
+                "redness_diff": abs(left_redness - right_redness),
+                "discharge_diff": left_discharge_detected != right_discharge_detected,
+                "opacity_diff": abs(left_clarity - right_clarity)  # 白内障指标
+            }
+            ```
+            
+            **量化特征**：
+            
+            ```json
+            {
+              "left_eye": {
+                "sclera_rgb": [R, G, B],
+                "jaundice_index": "R/B比值，>2.5为黄疸警戒",
+                "redness_score": 0.0-1.0,
+                "discharge_detected": true/false,
+                "discharge_type": "watery/mucoid/purulent/none",
+                "pupil_size_norm": 0.0-1.0,
+                "corneal_opacity": 0.0-1.0
+              },
+              "right_eye": "结构相同",
+              "asymmetry_score": 0.0-1.0,
+              "asymmetry_flags": ["pupil_size", "redness"]
+            }
+            ```
+            
+            **发给VLM的包**：
+            
+            - 图①：双眼全景图（含眉弓/鼻梁，左右对比框架）
+            - 图②：左眼单独高清裁剪
+            - 图③：右眼单独高清裁剪
+            - 量化JSON（突出左右差异字段）
+            
+            **这是唯一值得发3张图的模块**，因为左右对比信息无法在单张ROI里保留。
+            
+            **估计延迟**：预处理300ms + VLM首Token 1.8s（多图）
+            
+        - 排泄物
+            
+            **引导设计（心理门槛是最大障碍）**：
+            
+            - 文案：「粑粑是最直接的健康信号，很多疾病先从这里发现」
+            - 强烈建议白纸背景（关键！消除背景干扰，简化分割）
+            - 检测到非白色背景时：提示但允许继续，精度会下降
+            
+            **白纸背景的技术价值**：
+            
+            ```
+            白色背景已知 → 背景像素阈值分割极简 → 排泄物主体轮廓清晰
+            vs
+            复杂背景（猫砂/草地）→ 需要GrabCut分割 → 精度下降20-30%
+            ```
+            
+            **血液本地规则触发（不依赖VLM）**：
+            
+            ```python
+            red_mask = cv2.inRange(hsv, (0,100,100), (10,255,255))  # 红色像素
+            blood_ratio = cv2.countNonZero(red_mask) / roi_area
+            
+            if blood_ratio > 0.05:  # 5%以上红色区域
+                return {"emergency_alert": True, "message": "检测到可能的血迹，建议立即就医"}
+                # 不等VLM，直接触发
+            ```
+            
+            **寄生虫检测（白色小点）**：
+            
+            ```python
+            # 在深色排泄物上检测白色高亮点
+            white_dots = detect_white_specks(roi, min_size=3, max_size=20)
+            parasite_suspected = len(white_dots) > 3
+            ```
+            
+            **发给VLM的包**：
+            
+            - 图①：排泄物ROI + 20% padding
+            - 量化JSON
+            - Prompt特别要求：「如发现红色区域/白色小点请详细说明可能原因」
+            
+            **估计延迟**：预处理100ms + VLM首Token 1.5s（或血液规则触发立即返回）
+            
+        - 呕吐物 内容物识别是核心价值
+            
+            **内容物颜色-病因映射（兽医知识库）**：
+            
+            ```
+            黄绿色（胆汁）→ 空腹呕吐/胃酸过多，常见于清晨
+            白色泡沫 → 空腹/胃酸反流，轻度常见
+            鲜红色 → 上消化道出血，紧急！
+            棕红咖啡渣 → 消化道出血+氧化，紧急！
+            未消化食物 → 进食过快/食物不耐受，通常轻度
+            绿色草茎 → 主动吃草（猫狗本能），通常良性
+            透明黏液 → 胃黏膜分泌，轻度
+            ```
+            
+            **两个紧急规则（本地触发，不等VLM）**：
+            
+            ```python
+            # 规则1：血液检测
+            if blood_detected and blood_ratio > 0.03:
+                return emergency_alert("消化道出血疑似")
+            
+            # 规则2：异物检测（异形固体）
+            contours = cv2.findContours(lesion_mask)
+            for c in contours:
+                if circularity(c) < 0.3 and area(c) > threshold:  # 非圆形大块固体
+                    return emergency_alert("可能误食异物")
+            ```
+            
+            **发给VLM的包**：
+            
+            - 图①：呕吐物ROI + 20% padding
+            - 量化JSON（重点标注内容物成分检测结果）
+            - Prompt：「请逐一识别可见内容物成分，结合颜色和形态判断可能的呕吐原因和紧急程度」
+            
+            **估计延迟**：预处理100ms + VLM首Token 1.5s
+            
+    - 趣味识别模块
+        - 品种识别
+            
+            **两阶段流水线**：
+            
+            ```
+            输入图
+            → 阶段1：宠物头部检测（YOLO-v8n，极轻量）
+              → 裁剪头部区域 + 10% padding（Oxford数据集已提供bbox格式）
+            → 阶段2：品种分类（Xception或MobileViTv3）
+              → 输出Top-3品种 + 置信度
+            → 知识库检索：品种卡片（寿命/常见病/性格）
+            ```
+            
+            **为什么品种识别不需要VLM**：
+            
+            - 专用分类器推理速度<200ms（vs VLM 1500ms）
+            - 成本低100倍
+            - 准确率不差（88-90% vs VLM ~85%）
+        - 情绪识别
+            
+            Nature Scientific Reports 2025研究证明LVLMs在严格受控条件下识别宠物情绪接近随机水平。本模块定位是「趣味参考」而非「健康诊断」
+            
+            **混合架构：规则层+VLM层**：
+            
+            ```
+            输入图
+            → MediaPipe提取客观特征（快速、确定性）:
+              - 耳朵角度（前竖/侧/后贴）
+              - 眼睛睁开度（0.0-1.0）
+              - 胡须角度（如可见）
+              - 身体姿势（蜷缩/舒展/紧绷）
+              - 尾巴位置（如可见）
+            → 规则映射 → 初始情绪象限（4象限）
+            → VLM接收：图片 + 规则层输出 → 生成趣味描述
+            → 输出：趣味化语言（非确定性诊断）
+            ```
+            
+            **情绪4象限规则**：
+            
+            ```
+            耳前竖 + 眼睁大 + 身体前倾 → 好奇/兴奋
+            耳后贴 + 眼眯缝 + 身体蜷缩 → 紧张/不安
+            眼半闭 + 身体放松舒展 → 慵懒/满足
+            耳侧展 + 胡须后贴 + 全身僵直 → 恐惧/愤怒
+            ```
+            
+            **输出语气设计（不确定性表达）**：
+            
+            ```
+            ❌ 错误：「你的猫现在很焦虑」
+            ✅ 正确：「橘子现在看起来像是... 进入了慵懒模式 😴」
+            ✅ 正确：「从耳朵和眼睛的状态判断，橘子好像在好奇什么」
+            ```
+            
+            **估计延迟**：关键点提取100ms + VLM描述生成 1.5s
+            
+        - 声音识别
+            
+            2510.12819（2025）提出VA框架，Valence Pearson r=0.9024，远超离散分类方法。LingChongTong Dataset（42,553个宠物声音样本）是目前最大公开数据集
+            
+            **完全独立的技术管线（与图像处理无关）**：
+            
+            ```
+            前端（expo-av）
+            → 录音3-5秒（wav格式）
+            → 前端质量预检：
+              - 信噪比<10dB → 提示「背景太吵，换安静环境」
+              - 峰值音量<-30dBFS → 提示「声音太小，靠近宠物」
+            → 上传
+            
+            后端（Python librosa）
+            → 特征提取：
+              - Log-Mel Spectrogram（128 mel bins，25ms窗口，10ms hop）
+              - MFCC（39维：13基础+13 delta+13 delta-delta）
+            → VA模型（19.5M参数Audio Transformer，基于arXiv:2510.12819）
+            → 输出Valence（-1~1）+ Arousal（-1~1）坐标
+            → 坐标映射到情绪象限 + 趣味化描述
+            ```
+            
+            **VA象限映射**：
+            
+            ```
+            高V高A（>0, >0）→ 兴奋/开心（玩耍叫声）
+            高V低A（>0, <0）→ 满足/放松（呼噜声）
+            低V高A（<0, >0）→ 痛苦/恐惧（嚎叫/哀鸣）
+            低V低A（<0, <0）→ 不适/沮丧（低鸣/呻吟）
+            ```
+            
+            **健康联动逻辑**：
+            
+            ```python
+            if valence < -0.5 and arousal > 0.5 and duration > 10s:
+                # 持续高强度负面叫声
+                suggest_health_check("频繁的痛苦叫声可能表示疼痛，建议检查体况")
+            ```
+            
+            **估计延迟**：特征提取200ms + VA模型推理300ms = **500ms总计**（唯一不调用VLM的模块）
+            
+        - 行为识别
+            
+            VideoMAE是2023-2024年视频理解的SOTA backbone。MVP用关键帧+VLM是已知最简方案。
+            
+            **输入**：3-10秒短视频（唯一视频模块）
+            
+            **前端优化**：
+            
+            ```
+            录制720p，限制最大10秒
+            → 前端关键帧提取（每秒2帧，最多20帧）
+            → 只上传关键帧序列（不上传完整视频）
+            → 减少上传量约90%
+            ```
+            
+            **两阶段路线**：
+            
+            ```
+            MVP阶段：
+              取首帧/中帧/尾帧共3张 → 发给VLM
+              → VLM描述每帧动作 → 合成行为描述
+              优点：极简，1周内可实现
+              缺点：无法识别动作序列（看不出「转圈走」这种重复性异常）
+            
+            中期阶段：
+              VideoMAE（基于MAE自监督预训练，16帧输入）
+              → 行为分类（14类常见行为 + 8类异常行为）
+              → 推理时间<300ms（A10G GPU）
+              优点：能识别时序异常行为
+            ```
+            
+            **异常行为标签库（有健康意义的）**：
+            
+            ```
+            日常：理毛/进食/饮水/睡觉/玩耍/探索/行走
+            异常：频繁抓挠同一部位/反复舔同一区域/转圈走/步态蹒跚
+                  /头部倾斜/抓耳/眯眼眨眼/摩擦脸部
+            ```
+            
+            **关键联动设计**：
+            
+            ```
+            异常行为检测 → 联动建议体况检测
+            「频繁抓耳」→ 「建议检查耳道模块」
+            「反复舔爪子」→ 「建议检查皮肤模块」
+            「步态蹒跚」→ 「建议就医，可能涉及神经或骨科问题」
+            ```
+            
+            **这是趣味模块变成健康入口的核心机制。**
+            
+            **估计延迟**：关键帧上传400ms + VLM 2s（MVP）/ VideoMAE 300ms（中期）
