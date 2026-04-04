@@ -45,7 +45,7 @@ function IntimacyRing({ score }: { score: number }) {
   return (
     <View style={[styles.ringWrap, { width: size, height: size }]}>
       <View style={[styles.ringOuter, { width: size, height: size, borderRadius: size / 2, borderColor: '#E8EFF8', borderWidth: stroke }]} />
-      <View style={[styles.ringInner, { width: inner, height: inner, borderRadius: inner / 2, borderColor: color, borderWidth: stroke, opacity: anim as any }]} />
+      <Animated.View style={[styles.ringInner, { width: inner, height: inner, borderRadius: inner / 2, borderColor: color, borderWidth: stroke, opacity: anim }]} />
       <View style={styles.ringCenter}>
         <Text style={styles.ringScore}>{Math.round(score)}</Text>
         <Text style={styles.ringLabel}>친밀도</Text>
@@ -160,7 +160,7 @@ export default function MentalHealthScreen() {
   }
 
   const mood = profile?.mood_today ?? 'calm'
-  const intimacy = profile?.intimacy_score ?? 0
+  const intimacy = Number(profile?.intimacy_score ?? 0)
 
   return (
     <SafeAreaView style={styles.safe}>
