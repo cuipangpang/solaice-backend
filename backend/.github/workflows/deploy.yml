@@ -1,0 +1,55 @@
+name: Deploy to 腾讯云
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: SSH Deploy to /opt/solaice
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 43.164.134.43
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          timeout: 300s
+          script: |
+            set -e
+
+            echo "=== [1/5] 进入项目目录 ==="
+            cd /opt/solaice
+
+            echo "=== [2/5] 拉取最新代码 ==="
+            git fetch origin main
+            git reset --hard origin/main
+            echo "当前 commit: $(git log --oneline -1)"
+
+            echo "=== [3/5] 进入 backend 目录 ==="
+            cd /opt/solaice/backend
+
+            echo "=== [4/5] 重建并重启后端容器 ==="
+            docker compose build backend-api
+            docker compose up -d --no-deps backend-api
+
+            echo "=== [5/5] 健康检查 ==="
+            sleep 10
+            for i in 1 2 3 4 5; do
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+                http://localhost:8000/api/v1/health 2>/dev/null || echo "000")
+              if [ "$STATUS" = "200" ]; then
+                echo "✅ 배포 성공! HTTP $STATUS"
+                exit 0
+              fi
+              echo "대기 중... ($i/5) HTTP $STATUS"
+              sleep 8
+            done
+            echo "❌ 헬스체크 실패"
+            docker compose logs backend-api --tail=30
+            exit 1
