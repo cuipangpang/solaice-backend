@@ -1,0 +1,1037 @@
+[
+  {
+    "body_part": "귀",
+    "condition": "이개선충증 (귀진드기)",
+    "severity": "경증",
+    "visual_description": "귀 내부에 건조한 커피색 분비물이 소량 관찰됨. 귀도 입구 주변 피부는 정상 색조. 귀털 약간 엉킴.",
+    "differential": [
+      "이개선충증",
+      "세균성 외이염"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0001",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "귀",
+    "condition": "이개선충증 (귀진드기)",
+    "severity": "중등도",
+    "visual_description": "귀 내부에 짙은 갈색-검정색의 건조한 분비물이 다량 관찰됨. 귀 입구 주변 피부에 경도의 발적 소견. 귀털 엉킴 있음.",
+    "differential": [
+      "이개선충증",
+      "세균성 외이염"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0002",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "귀",
+    "condition": "이개선충증 (귀진드기)",
+    "severity": "중증",
+    "visual_description": "귀 전체가 검고 두꺼운 가피(딱지)로 덮여 있음. 심한 발적과 찰과상, 귀 가장자리 털 빠짐. 삼출액 확인됨.",
+    "differential": [
+      "이개선충증 중증",
+      "혼합감염(세균+진드기)"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0003",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "귀",
+    "condition": "세균성 외이염",
+    "severity": "경증",
+    "visual_description": "귀도 내 황색-갈색의 습윤한 분비물 소량. 귀도 벽 경미한 발적. 악취 약간 있음.",
+    "differential": [
+      "세균성 외이염(초기)",
+      "말라세지아 외이염"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0004",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "귀",
+    "condition": "말라세지아(효모균) 외이염",
+    "severity": "중등도",
+    "visual_description": "귀도 내 짙은 갈색의 기름진 왁스 분비물 다량. 특유의 빵/효모 냄새. 귀도 벽 적갈색 착색.",
+    "differential": [
+      "말라세지아 외이염",
+      "혼합성 외이염"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0005",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "귀",
+    "condition": "세균성 외이염",
+    "severity": "중증",
+    "visual_description": "귀도 전체에 화농성 노란색-초록색 분비물. 심한 종창으로 귀도 내강 좁아짐. 촉진 시 통증 반응. 고름 누출.",
+    "differential": [
+      "세균성 외이염(화농)",
+      "중이염 동반 가능"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0006",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "귀",
+    "condition": "알레르기성 외이염",
+    "severity": "경증",
+    "visual_description": "귀도 내 묽은 갈색 분비물. 이갑개 피부 미만성 발적 및 경미한 부종. 분비물량에 비해 악취 적음.",
+    "differential": [
+      "알레르기성 외이염",
+      "음식 알레르기 관련"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0007",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "귀",
+    "condition": "귀혈종",
+    "severity": "중등도",
+    "visual_description": "이개(귀 껍데기) 내측에 연한 파동성 종창. 이개 두께 약 1-1.5cm 비대. 발적 및 체온 상승 소견. 핀치 시 통증 반응.",
+    "differential": [
+      "귀혈종",
+      "이개 낭종"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0008",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "귀",
+    "condition": "정상 귀",
+    "severity": "정상",
+    "visual_description": "귀도 내 연한 분홍색 피부, 매끄러운 표면. 분비물 없음 또는 극소량의 담황색 귀지. 악취 없음. 귀도 벽 정상 두께.",
+    "differential": [
+      "정상"
+    ],
+    "urgency_level": "낮음",
+    "id": "img_0009",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "귀",
+    "condition": "중이염",
+    "severity": "중증",
+    "visual_description": "고막이 불투명하게 변색되어 있고 팽윤 소견. 귀도 내 화농성 분비물. 동측 안면 비대칭 의심. 통증으로 입 벌리기 어려워함.",
+    "differential": [
+      "중이염",
+      "내이염"
+    ],
+    "urgency_level": "응급",
+    "id": "img_0010",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "귀",
+    "condition": "귀 폴립",
+    "severity": "중등도",
+    "visual_description": "귀도 내 분홍색-적색의 부드러운 돌출성 종괴 관찰. 표면 매끄러움. 주변 점막 발적. 분비물 소량 동반.",
+    "differential": [
+      "염증성 폴립",
+      "귀도 선종"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0011",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "귀",
+    "condition": "귀 진드기 치료 후 정상 회복",
+    "severity": "경증 회복기",
+    "visual_description": "이전 이개선충 치료 후 분비물 대부분 제거됨. 잔여 경미한 착색. 귀도 벽 정상화 중. 새로운 병변 없음.",
+    "differential": [
+      "치료 반응 양호",
+      "재감염 모니터링 필요"
+    ],
+    "urgency_level": "낮음",
+    "id": "img_0012",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "귀",
+    "condition": "이개 피부염",
+    "severity": "중등도",
+    "visual_description": "이개 외측 및 내측 피부에 인설(비듬)과 발적. 모낭염 소견. 긁힌 흔적으로 찰과상. 탈모 부위 직경 약 2cm.",
+    "differential": [
+      "이개 피부염",
+      "알레르기성",
+      "진균성"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0013",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "구강",
+    "condition": "치주염 1단계",
+    "severity": "경증",
+    "visual_description": "치아 기저부에 담황색 치석 소량. 잇몸 가장자리 경미한 발적. 출혈 없음. 치아 흔들림 없음.",
+    "differential": [
+      "치은염(초기)",
+      "치석 침착"
+    ],
+    "urgency_level": "낮음",
+    "id": "img_0014",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "구강",
+    "condition": "치주염 2단계",
+    "severity": "중등도",
+    "visual_description": "치아 1/3~1/2 높이의 갈색 치석 침착. 잇몸 발적 및 부종 명확. 치은 후퇴 시작. 구취 있음. 촉진 시 출혈.",
+    "differential": [
+      "치주염 2단계",
+      "치주낭 형성"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0015",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "구강",
+    "condition": "치주염 3-4단계",
+    "severity": "중증",
+    "visual_description": "검은색 두꺼운 치석이 치아 전체를 덮음. 치은 심한 후퇴로 치근 노출. 치아 흔들림 있음. 화농성 삼출. 심한 구취.",
+    "differential": [
+      "중증 치주염",
+      "발치 적응증"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0016",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "구강",
+    "condition": "고양이 구내염(FCGS)",
+    "severity": "중증",
+    "visual_description": "구강 후방 점막(인두 부위) 광범위한 궤양성 병변. 조직 비후 및 출혈. 통증으로 입 벌리기 거부. 심한 침흘림 및 구취.",
+    "differential": [
+      "고양이 만성 구내염(FCGS)",
+      "칼리시바이러스 관련"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0017",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "구강",
+    "condition": "치은 증식증",
+    "severity": "중등도",
+    "visual_description": "잇몸 조직이 증식하여 치아 치관 일부 덮음. 표면 매끄럽고 핑크색. 출혈 없음. 박서 등 특정 견종에 호발.",
+    "differential": [
+      "약물성 치은 증식",
+      "특발성 치은 증식"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0018",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "구강",
+    "condition": "유치 잔존",
+    "severity": "경증",
+    "visual_description": "영구치 옆에 유치(젖니)가 남아 있음. 두 치아가 나란히 위치. 주변 잇몸 발적 소견. 주로 상악 견치에서 관찰.",
+    "differential": [
+      "유치 잔존(이중 치열)",
+      "영구치 맹출 이상"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0019",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "구강",
+    "condition": "구강 종양",
+    "severity": "중증",
+    "visual_description": "하악 잇몸에 불규칙한 경계의 적색-검붉은 종괴. 표면 괴사 및 궤양. 주변 치아 이탈. 크기 약 2×3cm. 악취 심함.",
+    "differential": [
+      "구강 편평세포암종",
+      "악성 흑색종",
+      "섬유육종"
+    ],
+    "urgency_level": "응급",
+    "id": "img_0020",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "구강",
+    "condition": "정상 치아 (성견)",
+    "severity": "정상",
+    "visual_description": "치아 표면 흰색-상아색. 치석 없음. 잇몸 연한 분홍색, 정상 두께. 치아 흔들림 없음. 구취 없음.",
+    "differential": [
+      "정상"
+    ],
+    "urgency_level": "낮음",
+    "id": "img_0021",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "구강",
+    "condition": "구내 궤양",
+    "severity": "중등도",
+    "visual_description": "혀 가장자리 및 협점막에 백색 테두리를 가진 궤양성 병변 다수. 직경 3-8mm. 통증으로 식이 거부. 경도의 침흘림.",
+    "differential": [
+      "구내염",
+      "칼리시바이러스",
+      "접촉성 자극"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0022",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "구강",
+    "condition": "치아 파절",
+    "severity": "중등도",
+    "visual_description": "상악 제4전구치(열육치) 치관 파절. 치수 노출 여부 불명확. 파절면 갈색 착색. 주변 잇몸 반응성 발적.",
+    "differential": [
+      "치아 파절 (치수 노출)",
+      "치아 파절 (치수 비노출)"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0023",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "구강",
+    "condition": "혀 염증",
+    "severity": "경증",
+    "visual_description": "혀 표면 일부 발적 및 소수포 형성. 혀 전체 부종 없음. 타액 증가. 음식물 섭취 시 불편감 소견.",
+    "differential": [
+      "설염",
+      "이물질 자극",
+      "접촉성 알레르기"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0024",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "구강",
+    "condition": "에프리스(에폴리스)",
+    "severity": "경증",
+    "visual_description": "잇몸에서 돌출된 분홍색 구형 종괴. 표면 매끄러움. 기저부 가늘고 유경성. 크기 약 5mm. 출혈 경향 있음.",
+    "differential": [
+      "양성 에프리스(에폴리스)",
+      "섬유성 과형성"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0025",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "구강",
+    "condition": "치아 흡수 병변 (고양이 TORL)",
+    "severity": "중증",
+    "visual_description": "하악 어금니 치경부에 분홍색의 육아조직 침범. 치관 구조 손실. 치아 표면에 분화구 모양 흡수 병변. 촉진 시 통증.",
+    "differential": [
+      "치아 흡수 병변 (FORL/TORL)",
+      "치주염 합병"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0026",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "눈",
+    "condition": "결막염 (바이러스성)",
+    "severity": "경증",
+    "visual_description": "결막 전반적 충혈 및 부종. 수양성 눈물 분비. 안검 경미한 부종. 각막은 투명하게 유지됨.",
+    "differential": [
+      "바이러스성 결막염",
+      "허피스바이러스 (고양이)"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0027",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "눈",
+    "condition": "세균성 결막염",
+    "severity": "중등도",
+    "visual_description": "결막 심한 충혈. 점액화농성 눈곱 다량 (황색-녹색). 안검이 분비물로 유착. 각막 투명도 유지.",
+    "differential": [
+      "세균성 결막염",
+      "클라미디아 감염 (고양이)"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0028",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "눈",
+    "condition": "각막 궤양",
+    "severity": "중증",
+    "visual_description": "각막 중앙부 백색 혼탁 병변. 플루레세인 염색 양성 예상. 통증으로 지속적 안검 경련. 수양성 분비물 다량.",
+    "differential": [
+      "표재성 각막 궤양",
+      "심재성 각막 궤양"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0029",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "눈",
+    "condition": "각막 천공",
+    "severity": "중증",
+    "visual_description": "각막에 전층 결손 부위 관찰. 홍채 탈출 소견. 방수 누출. 안압 저하. 심한 통증 반응. 즉각적 외과적 처치 필요.",
+    "differential": [
+      "각막 천공"
+    ],
+    "urgency_level": "응급",
+    "id": "img_0030",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "눈",
+    "condition": "포도막염",
+    "severity": "중증",
+    "visual_description": "전안방 흐림 (방수 혼탁). 각막 뒤 침착물(KP). 동공 수축 (축동). 심한 충혈 및 광선 공포증. 안압 저하.",
+    "differential": [
+      "전포도막염",
+      "범포도막염 (FIP, 고양이)"
+    ],
+    "urgency_level": "응급",
+    "id": "img_0031",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "눈",
+    "condition": "녹내장",
+    "severity": "중증",
+    "visual_description": "안구 현저한 비대(우안두증). 공막 혈관 확장 및 충혈. 각막 부종으로 뿌옇게 보임. 동공 확대 및 대광 반사 소실. 안압 상승.",
+    "differential": [
+      "원발성 녹내장",
+      "이차성 녹내장"
+    ],
+    "urgency_level": "응급",
+    "id": "img_0032",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "눈",
+    "condition": "안검내반 (눈꺼풀 말림)",
+    "severity": "중등도",
+    "visual_description": "하안검이 안구 쪽으로 말려 있어 속눈썹이 각막에 지속 자극. 각막 경미한 혼탁. 수양성 눈물 과다. 눈 주변 피부 습윤.",
+    "differential": [
+      "안검내반",
+      "이첩모증(속눈썹 이상)"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0033",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "눈",
+    "condition": "제3안검 돌출 (체리아이)",
+    "severity": "중등도",
+    "visual_description": "내안각에서 분홍색-적색의 구형 조직이 돌출. 직경 약 1cm. 표면 건조 및 충혈. 주로 편측 발생. 상안검 안쪽에서 관찰됨.",
+    "differential": [
+      "제3안검선 탈출 (체리아이)"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0034",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "눈",
+    "condition": "정상 눈 (건강한 성묘)",
+    "severity": "정상",
+    "visual_description": "각막 투명. 결막 연한 분홍색. 분비물 없음. 동공 좌우 대칭. 각막 광택 양호. 제3안검 보이지 않음.",
+    "differential": [
+      "정상"
+    ],
+    "urgency_level": "낮음",
+    "id": "img_0035",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "눈",
+    "condition": "각막 흑색증 (고양이)",
+    "severity": "중증",
+    "visual_description": "각막 중앙부에 갈색-검은색 색소 침착 병변. 경계 불명확. 각막 혼탁 동반. 고양이에서 특징적으로 발생. 통증 반응 없을 수 있음.",
+    "differential": [
+      "각막 흑색증 (Corneal Sequestrum)",
+      "색소성 각막염"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0036",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "눈",
+    "condition": "결막 이물질",
+    "severity": "경증",
+    "visual_description": "결막낭 내 이물질(털, 모래 등) 확인. 주변 결막 발적. 눈물 과다. 눈 비빔 행동. 이물질 제거 후 호전 예상.",
+    "differential": [
+      "결막 이물질",
+      "이물질 제거 후 추적 필요"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0037",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "눈",
+    "condition": "안검외반",
+    "severity": "경증",
+    "visual_description": "하안검이 바깥쪽으로 처짐. 결막 노출 및 건조. 만성 충혈. 점액성 분비물 축적. 바셋하운드 등 특정 견종에 호발.",
+    "differential": [
+      "안검외반",
+      "만성 결막 노출"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0038",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "눈",
+    "condition": "망막 박리",
+    "severity": "중증",
+    "visual_description": "동공 확대 및 대광 반사 소실. 전안부 정상이나 시력 저하 증상. 안저 검사 시 망막 주름 또는 박리 소견. 고혈압성 변화 동반 가능.",
+    "differential": [
+      "망막 박리 (고혈압성)",
+      "유전성 망막 위축"
+    ],
+    "urgency_level": "응급",
+    "id": "img_0039",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "피부",
+    "condition": "알레르기성 피부염 (환경성)",
+    "severity": "경증",
+    "visual_description": "복부 및 서혜부 피부 미만성 발적. 소수포 산재. 긁힌 흔적(선상 찰과상). 탈모 패치 없음. 비듬 경미.",
+    "differential": [
+      "환경성 알레르기 피부염",
+      "접촉성 피부염"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0040",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "피부",
+    "condition": "음식 알레르기 피부염",
+    "severity": "중등도",
+    "visual_description": "얼굴(특히 눈 주변), 발, 겨드랑이 대칭성 발적. 구진 및 농포. 만성 자가 외상성 병변. 흡습성 피부염 소견.",
+    "differential": [
+      "음식 알레르기 피부염",
+      "아토피성 피부염"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0041",
+    "created_at": "2026-03-23T19:15:55.650714"
+  },
+  {
+    "body_part": "피부",
+    "condition": "진균성 피부염 (말라세지아)",
+    "severity": "중등도",
+    "visual_description": "발가락 사이, 겨드랑이 기름진 갈색 착색. 비린내/빵 냄새. 피부 두꺼워짐(태선화). 심한 가려움증. 코커스패니얼에 호발.",
+    "differential": [
+      "말라세지아 피부염",
+      "습진성 병변"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0042",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "피부",
+    "condition": "피부 사상균증 (링웜)",
+    "severity": "중등도",
+    "visual_description": "원형의 탈모 패치, 경계 비교적 명확. 중앙부 인설 및 가피. 직경 1-3cm. 진균 형광 양성(우드램프). 여러 부위 동시 발생.",
+    "differential": [
+      "피부 사상균증 (링웜)",
+      "세균성 모낭염"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0043",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "피부",
+    "condition": "세균성 피부염 (농피증)",
+    "severity": "중등도",
+    "visual_description": "피부에 농포, 구진 다수. 황색 가피 형성. 원형 탈모 패치 (표재성 농피증 특징). 체링 병변(표재성 농피증 특이 소견).",
+    "differential": [
+      "표재성 세균성 농피증",
+      "딥 파이오더마"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0044",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "피부",
+    "condition": "개 아토피성 피부염",
+    "severity": "중증",
+    "visual_description": "전신 발적 및 태선화. 만성 자가 외상으로 피부 두꺼워짐. 색소침착 증가. 발, 귀, 겨드랑이, 서혜부 대칭성 이환. 이차 세균/진균 감염 동반.",
+    "differential": [
+      "개 아토피성 피부염 (CAD)",
+      "이차 농피증 합병"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0045",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "피부",
+    "condition": "옴 (개옴진드기증)",
+    "severity": "중증",
+    "visual_description": "귀 가장자리, 팔꿈치, 복부 극심한 소양증. 인설성 가피 형성. 피부 두꺼워짐. 표피 손상 심함. 타인에게도 전파 가능.",
+    "differential": [
+      "개옴 (Sarcoptic mange)",
+      "알레르기성 피부염"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0046",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "피부",
+    "condition": "모낭충증 (데모덱스)",
+    "severity": "중등도",
+    "visual_description": "국소성 탈모 패치, 인설. 면포 형성. 얼굴과 앞다리 호발. 소양증 없거나 경미. 면역 저하 동물에서 전신성 발현 가능.",
+    "differential": [
+      "국소성 데모덱스",
+      "전신성 데모덱스"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0047",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "피부",
+    "condition": "정상 피부",
+    "severity": "정상",
+    "visual_description": "피부 탄력 양호. 모질 윤기 있음. 발적 없음. 비듬 없음. 피부 두께 정상. 가피 없음. 색소침착 균일.",
+    "differential": [
+      "정상"
+    ],
+    "urgency_level": "낮음",
+    "id": "img_0048",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "피부",
+    "condition": "핫스팟 (급성 습성 피부염)",
+    "severity": "중증",
+    "visual_description": "경계 비교적 명확한 원형 병변. 삼출물로 젖어 있음. 표피 손실 및 발적. 주변 털 엉킴. 악취. 골든리트리버 등 장모종에 호발.",
+    "differential": [
+      "급성 습성 피부염 (핫스팟)",
+      "이차 세균 감염"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0049",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "피부",
+    "condition": "피지선 과형성",
+    "severity": "경증",
+    "visual_description": "중년령 이상 개에서 피부 표면에 황색-백색의 작은 원형 융기. 중앙 함몰. 주로 몸통에 다수 발생. 소양증 없음.",
+    "differential": [
+      "피지선 과형성 (양성)",
+      "기저세포종"
+    ],
+    "urgency_level": "낮음",
+    "id": "img_0050",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "피부",
+    "condition": "호산구성 육아종 복합체 (고양이)",
+    "severity": "중등도",
+    "visual_description": "하순에 경계 명확한 궤양성 병변 (경증 궤양). 표면 황색 가피. 통증 경미. 고양이 호산구성 복합체 중 하나.",
+    "differential": [
+      "호산구성 궤양 (고양이)",
+      "종양성 병변"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0051",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "피부",
+    "condition": "비만세포종",
+    "severity": "중증",
+    "visual_description": "피부에 단발성 결절 (직경 1-3cm). 탈모 동반. 발적 및 부종. 조작 시 일시적 팽윤(다리에 현상). 경계 불명확.",
+    "differential": [
+      "비만세포종",
+      "지방종",
+      "피지선 종양"
+    ],
+    "urgency_level": "응급",
+    "id": "img_0052",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "항문/분변",
+    "condition": "정상 분변",
+    "severity": "정상",
+    "visual_description": "분변 갈색 또는 담갈색. 형태 유지, 로그형. 점액 없음. 혈액 없음. 냄새 정상. 수분 적절.",
+    "differential": [
+      "정상"
+    ],
+    "urgency_level": "낮음",
+    "id": "img_0053",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "항문/분변",
+    "condition": "혈변 (선홍색)",
+    "severity": "중증",
+    "visual_description": "선홍색 혈액이 분변 표면에 코팅되거나 분변에 섞임. 분변 형태 정상이거나 묽음. 대장/직장 출혈 시사.",
+    "differential": [
+      "대장염",
+      "직장 출혈",
+      "항문낭 파열"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0054",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "항문/분변",
+    "condition": "혈변 (흑변/타르변)",
+    "severity": "중증",
+    "visual_description": "분변이 타르처럼 검고 악취 강함. 점성 있음. 소화된 혈액 시사. 상부 소화관 출혈 의심.",
+    "differential": [
+      "위장관 출혈 (상부)",
+      "위궤양",
+      "장중첩"
+    ],
+    "urgency_level": "응급",
+    "id": "img_0055",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "항문/분변",
+    "condition": "기생충 감염 (회충)",
+    "severity": "중등도",
+    "visual_description": "분변 내 백색 선충 (길이 3-10cm) 관찰. 분변 묽거나 점액 혼합. 유충 감염 시 분변에서 미세한 충란 확인 (현미경).",
+    "differential": [
+      "회충증 (Toxocara)",
+      "구충증"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0056",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "항문/분변",
+    "condition": "기생충 감염 (편충)",
+    "severity": "중등도",
+    "visual_description": "선홍색 혈액이 섞인 점액성 묽은 변. 편충 충란 현미경 확인 (양극형 계란형). 힘주기 행동 반복.",
+    "differential": [
+      "편충증 (Trichuris)",
+      "대장염"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0057",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "항문/분변",
+    "condition": "파보바이러스 설사",
+    "severity": "중증",
+    "visual_description": "혈액 혼합된 심한 수양성 설사. 매우 특징적인 악취. 토마토 소스 유사 외관. 탈수 심각. 미접종 강아지에서 위험.",
+    "differential": [
+      "파보바이러스 장염",
+      "장중첩 (합병)"
+    ],
+    "urgency_level": "응급",
+    "id": "img_0058",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "항문/분변",
+    "condition": "항문낭 질환",
+    "severity": "중등도",
+    "visual_description": "항문 좌우 5시/7시 방향 항문낭 팽창 및 발적. 분변 배출 후 항문 바닥에 끄는 행동. 항문 주변 피부 탈색 및 착색.",
+    "differential": [
+      "항문낭 염증",
+      "항문낭 파열",
+      "항문낭 종양"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0059",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "항문/분변",
+    "condition": "항문낭 파열",
+    "severity": "중증",
+    "visual_description": "항문 측방에 개방성 누공 확인. 화농성 삼출물 배출. 주변 피부 발적 및 부종. 통증으로 배변 거부. 즉각 처치 필요.",
+    "differential": [
+      "항문낭 파열 및 누공 형성"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0060",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "항문/분변",
+    "condition": "점액성 설사",
+    "severity": "경증",
+    "visual_description": "분변 표면에 점액 코팅. 형태는 유지 또는 약간 묽음. 혈액 없음. 대장 자극 시사. 식이 변화 또는 스트레스 관련 가능.",
+    "differential": [
+      "대장 과민증",
+      "스트레스성 대장염"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0061",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "항문/분변",
+    "condition": "지방변",
+    "severity": "중등도",
+    "visual_description": "분변 창백하고 기름진 외관. 매우 악취 강함. 부유 경향. 소화 흡수 불량 시사. 췌장 외분비 부전 가능.",
+    "differential": [
+      "췌장 외분비 부전 (EPI)",
+      "소장 흡수 불량"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0062",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "항문/분변",
+    "condition": "직장 탈출",
+    "severity": "중증",
+    "visual_description": "항문에서 원통형 적색-자색 점막 조직 돌출. 표면 건조화 또는 삼출. 조직 생존력 여부 중요. 주로 어린 동물에서 발생.",
+    "differential": [
+      "직장 탈출",
+      "직장-결장 탈출"
+    ],
+    "urgency_level": "응급",
+    "id": "img_0063",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "항문/분변",
+    "condition": "회충란 감염 (무증상)",
+    "severity": "경증",
+    "visual_description": "분변 외관 정상. 충란 확인은 현미경 검사 필요. 성충 육안 관찰 없음. 주기적 구충 미실시 동물에서 흔함.",
+    "differential": [
+      "무증상 회충 보유",
+      "정기 구충 필요"
+    ],
+    "urgency_level": "낮음",
+    "id": "img_0064",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "복부",
+    "condition": "복부 팽창 (위확장-염전)",
+    "severity": "중증",
+    "visual_description": "복부 좌측 현저한 팽창. 타진 시 북 소리(고장음). 구역 및 공연 구토. 동물 극도의 불안. 대형견에서 긴급 처치 필요.",
+    "differential": [
+      "위확장-염전 (GDV)",
+      "복수"
+    ],
+    "urgency_level": "응급",
+    "id": "img_0065",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "복부",
+    "condition": "복수",
+    "severity": "중증",
+    "visual_description": "복부 대칭성 팽창 및 파동감. 복부 하수(중력 방향 팽창). 호흡 곤란 동반 가능. 심장병, 간질환, 복막염 등 원인 다양.",
+    "differential": [
+      "심인성 복수",
+      "저단백혈증",
+      "복막염 (FIP 포함)"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0066",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "비강",
+    "condition": "비루 (점액성)",
+    "severity": "경증",
+    "visual_description": "코에서 투명-황색 점액성 분비물. 편측 또는 양측. 재채기 동반. 비공 주변 피부 자극 없음.",
+    "differential": [
+      "바이러스성 비염",
+      "세균성 비염",
+      "비강 이물질"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0067",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "비강",
+    "condition": "비혈(코피)",
+    "severity": "중증",
+    "visual_description": "한 쪽 코에서 선홍색 혈액 지속 유출. 혈액 응고 없음. 반대편 비강 정상. 구강 내 혈액 유입 없음.",
+    "differential": [
+      "비강 종양",
+      "혈소판 감소증",
+      "외상성 비출혈"
+    ],
+    "urgency_level": "높음",
+    "id": "img_0068",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "발",
+    "condition": "발가락 사이 염증 (지간염)",
+    "severity": "중등도",
+    "visual_description": "발가락 사이 피부 발적, 부종, 삼출물. 갈색 착색 (자가 그루밍). 표면 가피. 통증으로 절음. 알레르기 또는 이물질 관련.",
+    "differential": [
+      "지간 낭종",
+      "알레르기성 지간염",
+      "세균성 감염"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0069",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "body_part": "발",
+    "condition": "발바닥 패드 손상",
+    "severity": "중등도",
+    "visual_description": "발바닥 패드 일부 벗겨짐 또는 균열. 출혈 소량. 주변 발적. 뜨거운 바닥, 화학물질, 과활동 등 원인.",
+    "differential": [
+      "외상성 패드 손상",
+      "화학적 화상",
+      "패드 각화증"
+    ],
+    "urgency_level": "중간",
+    "id": "img_0070",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "id": "img_0071",
+    "body_part": "귀",
+    "condition": "만성 외이염",
+    "severity": "경증",
+    "visual_description": "귀도 내 담갈색 소량 분비물. 귀도 벽 경미한 비후. 악취 약함. 치료 이력 있음.",
+    "differential": [
+      "만성 외이염",
+      "내성균 감염"
+    ],
+    "urgency_level": "낮음",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "id": "img_0072",
+    "body_part": "귀",
+    "condition": "만성 외이염",
+    "severity": "중등도",
+    "visual_description": "귀도 내 갈색 중등량 분비물. 귀도 벽 중등도 비후 및 착색. 악취 중등도. 치료 이력 있음.",
+    "differential": [
+      "만성 외이염",
+      "내성균 감염"
+    ],
+    "urgency_level": "중간",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "id": "img_0073",
+    "body_part": "귀",
+    "condition": "만성 외이염",
+    "severity": "중증",
+    "visual_description": "귀도 내 검붉은 다량 분비물. 귀도 벽 심한 비후 및 폐쇄 경향. 악취 심함. 치료 이력 있음.",
+    "differential": [
+      "만성 외이염",
+      "내성균 감염"
+    ],
+    "urgency_level": "높음",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "id": "img_0074",
+    "body_part": "눈",
+    "condition": "각막 혼탁",
+    "severity": "경증",
+    "visual_description": "각막 주변부 경미한 혼탁 소견. 혈관 신생 없음. 시력 영향 경미.",
+    "differential": [
+      "각막 혼탁",
+      "각막 궤양 후유증",
+      "색소성 각막염"
+    ],
+    "urgency_level": "낮음",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "id": "img_0075",
+    "body_part": "눈",
+    "condition": "각막 혼탁",
+    "severity": "중등도",
+    "visual_description": "각막 중심부 중등도 혼탁 소견. 혈관 신생 경미한 혈관 신생 시작. 시력 영향 중등도.",
+    "differential": [
+      "각막 혼탁",
+      "각막 궤양 후유증",
+      "색소성 각막염"
+    ],
+    "urgency_level": "중간",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "id": "img_0076",
+    "body_part": "눈",
+    "condition": "각막 혼탁",
+    "severity": "중증",
+    "visual_description": "각막 전각막 심한 혼탁 소견. 혈관 신생 다수 혈관 신생. 시력 영향 심각.",
+    "differential": [
+      "각막 혼탁",
+      "각막 궤양 후유증",
+      "색소성 각막염"
+    ],
+    "urgency_level": "높음",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "id": "img_0077",
+    "body_part": "피부",
+    "condition": "모낭충증 (데모덱스) 변형",
+    "severity": "경증",
+    "visual_description": "탈모 패치 소수 소형 (각 직경 1cm 미만). 면포 소수. 이차 세균 감염 없음.",
+    "differential": [
+      "국소성 데모덱스",
+      "전신성 데모덱스"
+    ],
+    "urgency_level": "낮음",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "id": "img_0078",
+    "body_part": "피부",
+    "condition": "모낭충증 (데모덱스) 변형",
+    "severity": "중등도",
+    "visual_description": "탈모 패치 다발성 중등 크기. 면포 다수. 이차 세균 감염 경미한 농포.",
+    "differential": [
+      "국소성 데모덱스",
+      "전신성 데모덱스"
+    ],
+    "urgency_level": "중간",
+    "created_at": "2026-03-23T19:15:55.651240"
+  },
+  {
+    "id": "img_0079",
+    "body_part": "피부",
+    "condition": "모낭충증 (데모덱스) 변형",
+    "severity": "중증",
+    "visual_description": "탈모 패치 광범위 전신 이환. 면포 다수 면포 및 농포. 이차 세균 감염 전신성 농피증 합병.",
+    "differential": [
+      "국소성 데모덱스",
+      "전신성 데모덱스"
+    ],
+    "urgency_level": "높음",
+    "created_at": "2026-03-23T19:15:55.651240"
+  }
+]

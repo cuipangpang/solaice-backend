@@ -185,7 +185,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={styles.quickCard}
             activeOpacity={0.8}
-            onPress={() => Alert.alert("개발 중")}
+            onPress={() => router.push('/mental')}
           >
             <Text style={styles.quickCardEmoji}>🧠</Text>
             <View>

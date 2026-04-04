@@ -1,0 +1,191 @@
+{
+  "metadata": {
+    "batch": "C",
+    "description": "이미지 소견 설명 종자 데이터 (귀/눈/구강/피부/분변)",
+    "total": 15,
+    "created": "2026-03-24",
+    "usage": "이 데이터는 [이미지 분석 결과]: 태그와 함께 대화 데이터 생성에 사용됩니다"
+  },
+  "image_seeds": [
+    {
+      "id": "img_C_001",
+      "body_part": "귀",
+      "condition": "귀진드기 감염 (중등도)",
+      "animal": "고양이",
+      "severity": "중등도",
+      "visual_description": "귀 내부에 짙은 갈색-검정색의 건조한 분비물이 다량 관찰됨. 귀 입구 주변 피부에 경도의 발적 소견. 귀털 엉킴 있음. 분비물이 커피 찌꺼기처럼 부스러지는 양상.",
+      "differential": ["이개선충증(귀진드기)", "세균성 외이염"],
+      "urgency_level": "중간",
+      "hospital_needed": true,
+      "dialog_hint": "이미지 분석 결과를 보고 귀진드기 감염을 의심하며 추가 증상 확인 후 진단"
+    },
+    {
+      "id": "img_C_002",
+      "body_part": "귀",
+      "condition": "세균성 외이염 (심함)",
+      "animal": "강아지",
+      "severity": "심함",
+      "visual_description": "귀 내부에 황색-갈색의 점성 분비물이 다량 관찰됨. 외이도 피부 심한 발적 및 부종. 귀 입구 주변 피부 찰과상 있음. 악취 유발 가능성 높음.",
+      "differential": ["세균성 외이염", "복합 세균-진균 감염"],
+      "urgency_level": "높음",
+      "hospital_needed": true,
+      "dialog_hint": "심한 세균 외이염으로 즉시 수의사 진찰과 항생제 처방 필요"
+    },
+    {
+      "id": "img_C_003",
+      "body_part": "귀",
+      "condition": "정상",
+      "animal": "공통",
+      "severity": "정상",
+      "visual_description": "귀 내부 분홍색의 건강한 피부 관찰. 분비물 없음. 귀도 깨끗하고 냄새 없을 것으로 예상. 귀털 자연스럽고 엉킴 없음.",
+      "differential": ["정상 소견"],
+      "urgency_level": "낮음",
+      "hospital_needed": false,
+      "dialog_hint": "정상 귀 소견으로 현재 문제없으나 정기 관리 방법 안내"
+    },
+    {
+      "id": "img_C_004",
+      "body_part": "눈",
+      "condition": "결막염 (경도)",
+      "animal": "고양이",
+      "severity": "경도",
+      "visual_description": "결막(흰자 주변) 경도의 발적 관찰. 눈 안쪽 코너에 약간의 투명-흰색 분비물 관찰. 눈물 자국 있음. 눈을 약간 찡그리는 경향.",
+      "differential": ["세균성 결막염", "허피스 바이러스(FHV-1)", "알레르기"],
+      "urgency_level": "중간",
+      "hospital_needed": true,
+      "dialog_hint": "경도 결막염으로 원인 파악 위해 수의사 진찰 권유, 눈 비비지 않게 주의"
+    },
+    {
+      "id": "img_C_005",
+      "body_part": "눈",
+      "condition": "각막 궤양 의심",
+      "animal": "강아지",
+      "severity": "심함",
+      "visual_description": "각막(눈의 투명한 부분) 중앙부에 불투명한 흰색 혼탁 관찰. 눈을 거의 뜨지 못하고 눈물이 과다 분비됨. 결막 심한 발적. 눈 주변 분비물 건조하게 굳어 있음.",
+      "differential": ["각막 궤양", "각막 이물질", "안구 외상"],
+      "urgency_level": "높음",
+      "hospital_needed": true,
+      "dialog_hint": "각막 궤양 의심으로 즉시 수의사 진찰 필요, 눈 비비지 못하게 넥카라 착용 권유"
+    },
+    {
+      "id": "img_C_006",
+      "body_part": "눈",
+      "condition": "눈 분비물 (정상 범위)",
+      "animal": "고양이",
+      "severity": "경도",
+      "visual_description": "눈 안쪽 코너에 갈색-붉은 눈물 자국 관찰. 약간의 건조한 분비물이 눈 안쪽에 쌓여 있음. 결막은 분홍색으로 정상 소견. 눈 주변 털이 착색되어 있음.",
+      "differential": ["생리적 눈 분비물", "눈물 배출 문제(비루관 폐쇄)", "경도 결막 자극"],
+      "urgency_level": "낮음",
+      "hospital_needed": false,
+      "dialog_hint": "정상 범위의 눈 분비물이나 비루관 문제 가능성, 청결 유지 및 관찰 권유"
+    },
+    {
+      "id": "img_C_007",
+      "body_part": "구강",
+      "condition": "치주질환 (중등도)",
+      "animal": "강아지",
+      "severity": "중등도",
+      "visual_description": "치아 표면에 황갈색 치석 중등도 침착. 잇몸 발적 및 약간의 후퇴 소견. 일부 치아와 잇몸 사이 틈(치주낭) 관찰. 구취 예상됨.",
+      "differential": ["치주염(중등도)", "치은염"],
+      "urgency_level": "중간",
+      "hospital_needed": true,
+      "dialog_hint": "중등도 치주질환으로 마취 스케일링 권유, 심화 방지를 위한 가정 내 칫솔질 교육"
+    },
+    {
+      "id": "img_C_008",
+      "body_part": "구강",
+      "condition": "구내염 (고양이 만성 구내염)",
+      "animal": "고양이",
+      "severity": "심함",
+      "visual_description": "잇몸과 구강 점막 전반적인 심한 발적 및 부종. 구인두 부위 궤양 소견. 일부 출혈. 치아 표면 치석 침착. 극심한 구취 예상.",
+      "differential": ["고양이 만성 구내염(FCGS)", "칼리시 바이러스 관련 구내염"],
+      "urgency_level": "높음",
+      "hospital_needed": true,
+      "dialog_hint": "심한 만성 구내염으로 즉시 수의사 진찰 필요, 통증 관리와 스케일링/발치 고려"
+    },
+    {
+      "id": "img_C_009",
+      "body_part": "구강",
+      "condition": "정상",
+      "animal": "강아지",
+      "severity": "정상",
+      "visual_description": "잇몸 선명한 분홍색으로 건강한 소견. 치아 표면 치석 없이 깨끗함. 치아 배열 정상. 구취 없을 것으로 예상. 점막 촉촉하고 정상 색조.",
+      "differential": ["정상 구강 소견"],
+      "urgency_level": "낮음",
+      "hospital_needed": false,
+      "dialog_hint": "정상 구강 소견, 예방적 칫솔질과 정기 검진 권유"
+    },
+    {
+      "id": "img_C_010",
+      "body_part": "피부",
+      "condition": "알레르기성 피부염",
+      "animal": "강아지",
+      "severity": "중등도",
+      "visual_description": "복부와 사타구니 부위 피부 발적 및 구진 산재. 긁힌 흔적(찰과상) 다수 관찰. 일부 부위 탈모. 피부 두꺼워짐(태선화) 초기 소견.",
+      "differential": ["환경성 알레르기(아토피)", "음식 알레르기", "접촉성 피부염"],
+      "urgency_level": "중간",
+      "hospital_needed": true,
+      "dialog_hint": "알레르기성 피부염 소견으로 원인 파악을 위한 알레르기 검사와 피부 치료 권유"
+    },
+    {
+      "id": "img_C_011",
+      "body_part": "피부",
+      "condition": "진균 감염 (링웜)",
+      "animal": "고양이",
+      "severity": "중등도",
+      "visual_description": "피부에 원형의 탈모 병변 다수. 병변 경계 선명하고 주변에 약간의 인설(비듬). 병변 내 피부 약간의 발적. 신체 여러 부위에 산재.",
+      "differential": ["피부사상균증(링웜)", "세균성 모낭염"],
+      "urgency_level": "중간",
+      "hospital_needed": true,
+      "dialog_hint": "링웜(피부사상균) 의심, 사람에게도 전염 가능성 있음을 안내, 항진균 치료 권유"
+    },
+    {
+      "id": "img_C_012",
+      "body_part": "피부",
+      "condition": "세균성 피부염 (농피증)",
+      "animal": "강아지",
+      "severity": "심함",
+      "visual_description": "피부에 붉은 구진과 농포 산재. 일부 부위 황색 딱지(가피) 형성. 주변 털 엉킴. 병변 부위 열감 있을 것으로 예상. 심한 가려움 동반 예상.",
+      "differential": ["표재성 농피증(세균성 피부염)", "심재성 농피증"],
+      "urgency_level": "높음",
+      "hospital_needed": true,
+      "dialog_hint": "세균성 피부염(농피증)으로 항생제 치료 필요, 세균 배양 검사 권유"
+    },
+    {
+      "id": "img_C_013",
+      "body_part": "분변",
+      "condition": "정상 변",
+      "animal": "강아지",
+      "severity": "정상",
+      "visual_description": "갈색의 단단한 소시지 모양 변. 표면 약간의 점액 코팅 정상 범위. 혈액 없음. 기생충 육안 관찰 없음.",
+      "differential": ["정상 대변 소견"],
+      "urgency_level": "낮음",
+      "hospital_needed": false,
+      "dialog_hint": "정상 대변 소견, 현재 소화기 건강 양호"
+    },
+    {
+      "id": "img_C_014",
+      "body_part": "분변",
+      "condition": "혈변 (선홍색)",
+      "animal": "공통",
+      "severity": "높음",
+      "visual_description": "변 표면에 선홍색 혈액이 묻어 있음. 변 형태는 어느 정도 유지. 점액 증가 소견. 대장/직장 부위 출혈을 시사하는 소견.",
+      "differential": ["대장염", "직장 출혈", "혈소판 감소증", "이물질 손상"],
+      "urgency_level": "높음",
+      "hospital_needed": true,
+      "dialog_hint": "대장/직장 부위 출혈 소견으로 즉시 수의사 진찰 필요"
+    },
+    {
+      "id": "img_C_015",
+      "body_part": "분변",
+      "condition": "기생충 감염 (회충 육안 관찰)",
+      "animal": "강아지",
+      "severity": "중등도",
+      "visual_description": "변에서 흰색 가느다란 면발 같은 기생충 육안 관찰. 변 점액 증가. 변의 형태 일부 무름. 강한 냄새.",
+      "differential": ["회충 감염", "요충 감염"],
+      "urgency_level": "중간",
+      "hospital_needed": true,
+      "dialog_hint": "육안으로 기생충 확인, 대변 검사 후 구충제 처방 필요, 위생 관리 안내"
+    }
+  ]
+}

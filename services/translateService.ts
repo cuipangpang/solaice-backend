@@ -1,10 +1,14 @@
 /**
- * translateService.ts — 인간↔반려동물 양방향 번역 서비스
+ * translateService.ts — 번역 서비스
  *
- * - 인간→반려동물: 인간의 말을 반려동물이 이해할 수 있는 표현으로 변환
- * - 반려동물→인간: 반려동물의 행동/소리를 인간의 언어로 해석
- * - DashScope qwen-max (텍스트 전용) 사용
+ * [A] translate()          — check.tsx 텍스트 번역 (Qwen qwen-max)
+ * [B] translatePetToHuman()— 녹음 오디오 → 반려동물 감정/언어 해석 (FastAPI)
+ * [C] translateHumanToPet()— 인간 텍스트 → 반려동물 언어 변환 (FastAPI)
  */
+
+import type { HumanToPetResponse, Pet, PetToHumanResponse } from '@/types/translate'
+
+const BACKEND_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1'
 
 const API_URL =
   'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions'
@@ -75,4 +79,51 @@ export async function translate(
   const content: string = json?.choices?.[0]?.message?.content ?? ''
   if (!content) throw new Error('번역 결과를 받지 못했습니다.')
   return content.trim()
+}
+
+// ── [B] 반려동물 → 인간 (FastAPI) ────────────────────────────
+
+export async function translatePetToHuman(
+  audioBase64: string,
+  petType: Pet['type'],
+  petName: string,
+): Promise<PetToHumanResponse> {
+  const response = await fetch(`${BACKEND_URL}/translate/pet-to-human`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ audio_base64: audioBase64, pet_type: petType, pet_name: petName }),
+  })
+
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '')
+    const isNetwork = errText === '' && response.status === 0
+    throw new Error(
+      isNetwork ? 'NETWORK_ERROR' : `번역 서버 오류 (${response.status})`,
+    )
+  }
+
+  return response.json() as Promise<PetToHumanResponse>
+}
+
+// ── [C] 인간 → 반려동물 (FastAPI) ────────────────────────────
+
+export async function translateHumanToPet(
+  text: string,
+  petType: Pet['type'],
+): Promise<HumanToPetResponse> {
+  const response = await fetch(`${BACKEND_URL}/translate/human-to-pet`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, pet_type: petType }),
+  })
+
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '')
+    const isNetwork = errText === '' && response.status === 0
+    throw new Error(
+      isNetwork ? 'NETWORK_ERROR' : `번역 서버 오류 (${response.status})`,
+    )
+  }
+
+  return response.json() as Promise<HumanToPetResponse>
 }

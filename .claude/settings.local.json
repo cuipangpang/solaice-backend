@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(scp:*)",
+      "Bash(ssh:*)",
+      "Bash(cmd /c \"taskkill /PID 16108 /F\" && sleep 2 && netstat -ano | grep \":8081\")",
+      "Bash(find:*)",
+      "Bash(PYTHON=\"/c/Program Files/ShadowBot/shadowbot-5.32.44/python310/python.exe\" WHLS_DIR=\"/c/Program Files/ShadowBot/shadowbot-5.32.44/whls\" __NEW_LINE_3f016775f4eb8e72__ \"$PYTHON\" -m pip install --no-index --find-links=\"$WHLS_DIR\" requests certifi charset-normalizer idna urllib3)",
+      "Bash(\"C:/Program Files/ShadowBot/shadowbot-5.32.44/python310/python.exe\" pet_medical_seed/scripts/gen_cat_part1.py)",
+      "Bash(grep -rn \"TODO\\\\|FIXME\\\\|개발 중\\\\|未实现\\\\|placeholder\" /c/Users/10426/Documents/trae_projects/petHeath/app --include=*.tsx)"
+    ]
+  }
+}

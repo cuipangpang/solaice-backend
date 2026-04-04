@@ -70,6 +70,15 @@ function RootLayoutNav() {
         <Stack.Screen name="loading" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="translate/[petId]" options={{ headerShown: false }} />
+        <Stack.Screen name="mental/index"    options={{ headerShown: false }} />
+        <Stack.Screen name="mental/games"    options={{ headerShown: false }} />
+        <Stack.Screen name="mental/game-cat" options={{ headerShown: false }} />
+        <Stack.Screen name="mental/game-dog"        options={{ headerShown: false }} />
+        <Stack.Screen name="mental/media"           options={{ headerShown: false }} />
+        <Stack.Screen name="mental/preference-test" options={{ headerShown: false }} />
+        <Stack.Screen name="mental/profile"         options={{ headerShown: false }} />
+        <Stack.Screen name="mental/diary"           options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: "modal" }} />
       </Stack>
     </ThemeProvider>

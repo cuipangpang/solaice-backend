@@ -1,0 +1,25 @@
+[
+  {
+    "id": "seed_0036",
+    "source": "fallback_handcrafted",
+    "animal": "강아지",
+    "category": "노령동물관리",
+    "subcategory": "인지기능장애",
+    "urgency": "중간",
+    "symptoms": [],
+    "diagnosis_hints": [],
+    "treatment_direction": "",
+    "hospital_needed": true,
+    "raw_qa": {
+      "question": "노령견이 인지장애 증상을 보여요. 치매인가요?",
+      "answer": "개의 인지기능장애 증후군(CDS, Canine Cognitive Dysfunction Syndrome)은 노령견에서 흔하며 사람의 알츠하이머와 유사합니다.\n\nDISHAA 증상:\n- Disorientation: 집 안에서 길 잃기, 멍하게 있기\n- Interactions 감소: 가족과의 교류 줄어듦\n- Sleep-wake cycle 변화: 낮에 자고 밤에 배회\n- House soiling: 훈련된 배변 실수\n- Activity 변화: 탐험 감소 또는 증가\n- Anxiety 증가: 분리 불안, 불안해 보임\n\n7세 이상 개에서 증상 확인 시 동물병원 방문.\n\n관리:\n1. 처방 약물 (아닙틸린, 셀레길린 등)\n2. 인지 자극 활동 (퍼즐 피더, 학습 게임)\n3. 규칙적인 생활 패턴 유지\n4. 환경 개선 (야간 조명, 화장실 접근성)\n5. 항산화제 보조제 (오메가3, 비타민 E, DHA)\n\n완치는 불가능하나 삶의 질 유지에 도움이 됩니다."
+    },
+    "key_sentences": [
+      "7세 이상 개에서 증상 확인 시 동물병원 방문",
+      "개의 인지기능장애 증후군(CDS, Canine Cognitive Dysfunction Syndrome)은 노령견에서 흔하며 사람의 알츠하이머와 유사합니다",
+      "- Disorientation: 집 안에서 길 잃기, 멍하게 있기"
+    ],
+    "quality_score": 0.9,
+    "created_at": "2026-03-23T19:32:02.708654"
+  }
+]

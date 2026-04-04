@@ -75,15 +75,21 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Tab 2 — 번역（check.tsx） */}
+      {/* Tab 2 — 번역（translate.tsx） */}
       <Tabs.Screen
-        name="check"
+        name="translate"
         options={{
           title: "번역",
           tabBarIcon: ({ color }) => (
-            <TabIcon name="chatbubble-ellipses-outline" color={color} />
+            <TabIcon name="swap-horizontal-outline" color={color} />
           ),
         }}
+      />
+
+      {/* 구 번역 탭 — Tab Bar에서 숨김 */}
+      <Tabs.Screen
+        name="check"
+        options={{ href: null }}
       />
 
       {/* 건강 검진 페이지（Tab Bar에서 숨김，router.push로 진입） */}
