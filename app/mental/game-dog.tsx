@@ -28,12 +28,12 @@ import { mentalService } from '@/services/mentalService'
 
 const GAME_DURATION = 30
 
-const GAME_META: Record<string, { emoji: string; title: string }> = {
-  fetch:      { emoji: '⚾', title: '공 던지기' },
-  tug_of_war: { emoji: '🪢', title: '줄다리기' },
-  hide_seek:  { emoji: '🙈', title: '숨바꼭질' },
-  agility:    { emoji: '🏃', title: '어질리티' },
-  frisbee:    { emoji: '🥏', title: '프리스비' },
+const GAME_META: Record<string, { title: string }> = {
+  fetch:      { title: '공 던지기' },
+  tug_of_war: { title: '줄다리기' },
+  hide_seek:  { title: '숨바꼭질' },
+  agility:    { title: '어질리티' },
+  frisbee:    { title: '프리스비' },
 }
 
 function useGameTimer(onEnd: () => void) {
@@ -77,7 +77,7 @@ function FetchGame({ onScore }: { onScore: (n: number) => void }) {
       <Text style={gs.hint}>공이 내려올 때 탭해요!</Text>
       <Animated.View style={[gs.ball, { transform: [{ translateY: ballY }] }]}>
         <TouchableOpacity onPress={() => { if (catchable) { onScore(1); throwBall() } }} hitSlop={20}>
-          <Text style={{ fontSize: 52 }}>⚾</Text>
+          <Text style={gs.ballEmoji}>⚾</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -109,7 +109,7 @@ function TugOfWarGame({ onScore }: { onScore: (n: number) => void }) {
   return (
     <View style={gs.arena}>
       <Text style={gs.hint}>빠르게 탭해서 줄을 당겨요!</Text>
-      <Text style={{ fontSize: 60, marginBottom: 24 }}>🪢</Text>
+      <Text style={gs.ropeEmoji}>🪢</Text>
       <View style={gs.powerBarBg}>
         <Animated.View style={[gs.powerBarFill, { width: `${power}%`, backgroundColor: barColor }]} />
       </View>
@@ -144,8 +144,8 @@ function HideSeekGame({ onScore }: { onScore: (n: number) => void }) {
       <View style={gs.cardGrid}>
         {Array.from({ length: CARDS }).map((_, i) => (
           <TouchableOpacity key={i} style={gs.card} onPress={() => tapCard(i)}>
-            <Text style={{ fontSize: 36 }}>
-              {flipped.includes(i) ? (i === hiddenIdx ? '🐾' : '❌') : '🃏'}
+            <Text style={gs.cardLabel}>
+              {flipped.includes(i) ? (i === hiddenIdx ? '발바닥' : '×') : '🃏'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -187,7 +187,7 @@ function AgilityGame({ onScore }: { onScore: (n: number) => void }) {
             style={[gs.obsBtn, i === current && gs.obsBtnActive]}
             onPress={() => tapObstacle(i)}
           >
-            <Text style={{ fontSize: 36 }}>{obs}</Text>
+            <Text style={gs.obsLabel}>{obs}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -223,7 +223,7 @@ function FrisbeeGame({ onScore }: { onScore: (n: number) => void }) {
       <View style={gs.frisbeeTrack}>
         <Animated.View style={[gs.frisbeeWrap, { transform: [{ translateY: posY }] }]}>
           <TouchableOpacity onPress={() => { if (catchable) { onScore(2); fly() } }} hitSlop={16}>
-            <Text style={{ fontSize: 52 }}>{catchable ? '🥏✨' : '🥏'}</Text>
+            <Text style={[gs.frisbeeEmoji, catchable && gs.frisbeeEmojiActive]}>🥏</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -288,7 +288,7 @@ export default function GameDogScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
           <Text style={styles.backArrow}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{meta.emoji} {meta.title}</Text>
+        <Text style={styles.headerTitle}>{meta.title}</Text>
         <View style={{ width: 32 }} />
       </View>
 
@@ -305,7 +305,7 @@ export default function GameDogScreen() {
 
       {!started ? (
         <View style={styles.startWrap}>
-          <Text style={styles.startEmoji}>{meta.emoji}</Text>
+          <View style={styles.startAccent} />
           <Text style={styles.startTitle}>{meta.title}</Text>
           <TouchableOpacity style={styles.startBtn} onPress={start}>
             <Text style={styles.startBtnText}>시작!</Text>
@@ -313,7 +313,7 @@ export default function GameDogScreen() {
         </View>
       ) : done ? (
         <View style={styles.startWrap}>
-          <Text style={styles.startEmoji}>🎉</Text>
+          <Text style={styles.confetti}>🎉</Text>
           <Text style={styles.startTitle}>게임 종료!</Text>
           <Text style={styles.scoreText}>최종 점수: {score}점</Text>
           <TouchableOpacity style={[styles.startBtn, saving && { opacity: 0.5 }]} onPress={saveResult} disabled={saving}>
@@ -338,11 +338,12 @@ const styles = StyleSheet.create({
   hudValue:    { fontFamily: 'RobotoMono_400Regular', fontSize: 26, color: '#2B3A55' },
   hudValueWarn:{ color: '#D32F2F' },
   startWrap:   { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
-  startEmoji:  { fontSize: 72 },
+  startAccent: { width: 48, height: 6, borderRadius: 3, backgroundColor: '#BDE0FE' },
   startTitle:  { fontFamily: 'NotoSerifKR_700Bold', fontSize: 22, color: '#2B3A55' },
   scoreText:   { fontFamily: 'Pretendard-Regular', fontSize: 16, color: '#7A8DA3' },
   startBtn:    { backgroundColor: '#BDE0FE', borderRadius: 16, paddingHorizontal: 40, paddingVertical: 14, marginTop: 8 },
   startBtnText:{ fontFamily: 'Pretendard-SemiBold', fontSize: 18, color: '#2B3A55' },
+  confetti:    { fontSize: 40 },
 })
 
 const gs = StyleSheet.create({
@@ -350,24 +351,30 @@ const gs = StyleSheet.create({
   hint:    { position: 'absolute', top: 20, fontFamily: 'Pretendard-Regular', fontSize: 14, color: '#7A8DA3' },
 
   // 공 던지기
-  ball: { position: 'absolute', top: 0 },
+  ball:      { position: 'absolute', top: 0 },
+  ballEmoji: { fontSize: 48 },
 
   // 줄다리기
+  ropeEmoji:    { fontSize: 48, marginBottom: 24 },
   powerBarBg:   { width: 260, height: 22, backgroundColor: '#E8EFF8', borderRadius: 11, overflow: 'hidden', marginBottom: 12 },
   powerBarFill: { height: '100%', borderRadius: 11 },
   tugBtn:       { backgroundColor: '#BDE0FE', borderRadius: 20, paddingHorizontal: 48, paddingVertical: 18 },
   tugBtnText:   { fontFamily: 'Pretendard-SemiBold', fontSize: 20, color: '#2B3A55' },
 
   // 숨바꼭질
-  cardGrid: { flexDirection: 'row', flexWrap: 'wrap', width: 240, gap: 12, justifyContent: 'center', marginTop: 40 },
-  card:     { width: 68, height: 68, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: 14, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  cardGrid:  { flexDirection: 'row', flexWrap: 'wrap', width: 240, gap: 12, justifyContent: 'center', marginTop: 40 },
+  card:      { width: 68, height: 68, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: 14, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  cardLabel: { fontSize: 26 },
 
   // 어질리티
-  obsGrid:    { flexDirection: 'row', flexWrap: 'wrap', width: 240, gap: 14, justifyContent: 'center', marginTop: 40 },
-  obsBtn:     { width: 70, height: 70, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: 16, borderWidth: 2, borderColor: 'transparent', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
+  obsGrid:     { flexDirection: 'row', flexWrap: 'wrap', width: 240, gap: 14, justifyContent: 'center', marginTop: 40 },
+  obsBtn:      { width: 70, height: 70, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: 16, borderWidth: 2, borderColor: 'transparent', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
   obsBtnActive:{ borderColor: '#BDE0FE', backgroundColor: '#EAF6FF' },
+  obsLabel:    { fontSize: 26 },
 
   // 프리스비
-  frisbeeTrack: { height: 300, alignItems: 'center', justifyContent: 'flex-start' },
-  frisbeeWrap:  {},
+  frisbeeTrack:      { height: 300, alignItems: 'center', justifyContent: 'flex-start' },
+  frisbeeWrap:       {},
+  frisbeeEmoji:      { fontSize: 52, opacity: 0.5 },
+  frisbeeEmojiActive:{ opacity: 1 },
 })

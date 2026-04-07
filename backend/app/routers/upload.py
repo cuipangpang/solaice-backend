@@ -1,8 +1,10 @@
 import os
 import uuid
+import shutil
 
 import speech_recognition as sr
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from pydub import AudioSegment
 from typing import Literal
@@ -11,6 +13,41 @@ from app.schemas.response import APIResponse
 from app.services.s3_service import generate_presigned_upload_url
 
 router = APIRouter()
+
+AVATAR_UPLOAD_DIR = "/opt/solaice/uploads/avatars"
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+MAX_AVATAR_SIZE = 5 * 1024 * 1024  # 5MB
+
+
+@router.post("/avatar/{pet_id}")
+async def upload_avatar(pet_id: str, file: UploadFile = File(...)):
+    """宠物头像本地存储上传端点（不使用 S3）。"""
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="JPG/PNG/WEBP 파일만 업로드 가능해요")
+
+    content = await file.read()
+
+    if len(content) > MAX_AVATAR_SIZE:
+        raise HTTPException(status_code=400, detail="파일 크기는 5MB 이하여야 해요")
+
+    ext = (file.filename or "avatar.jpg").rsplit(".", 1)[-1].lower()
+    if ext not in ("jpg", "jpeg", "png", "webp"):
+        ext = "jpg"
+    filename = f"{pet_id}_{uuid.uuid4().hex[:8]}.{ext}"
+
+    os.makedirs(AVATAR_UPLOAD_DIR, exist_ok=True)
+    filepath = os.path.join(AVATAR_UPLOAD_DIR, filename)
+    with open(filepath, "wb") as f:
+        f.write(content)
+
+    base_url = os.getenv("BASE_URL", "http://43.164.134.43:8000")
+    avatar_url = f"{base_url}/uploads/avatars/{filename}"
+
+    return JSONResponse({
+        "success": True,
+        "avatar_url": avatar_url,
+        "filename": filename,
+    })
 
 ALLOWED_FOLDERS = {"avatars", "health-checks"}
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}

@@ -115,15 +115,15 @@ const THINKING_STAGES = [
 
 // ── 스티커 맵 (urgency → 이모지) ────────────────────────────
 const STICKER_MAP: Record<string, string> = {
-  normal: '🐱✨',
-  caution: '🐱💭',
-  visit: '🐱🏥',
-  emergency: '🚨',
-  green: '🐱✨',
-  orange: '🐱💭',
-  red: '🚨',
-  greeting: '🐱👋',
-  encourage: '🐱💪',
+  normal: '정상',
+  caution: '주의',
+  visit: '병원',
+  emergency: '긴급',
+  green: '양호',
+  orange: '주의',
+  red: '긴급',
+  greeting: '안녕',
+  encourage: '응원',
 }
 
 // ── 긴급도 설정 ───────────────────────────────────────────────
@@ -490,7 +490,7 @@ export default function ConsultScreen() {
       return (
         <View style={styles.aiBubbleWrap}>
           <View style={styles.aiAvatar}>
-            <Text style={styles.aiAvatarText}>🐾</Text>
+            <Text style={styles.aiAvatarText}>AI</Text>
           </View>
           <View style={styles.aiBubbleContent}>
             <View style={styles.aiBubble}>
@@ -518,10 +518,10 @@ export default function ConsultScreen() {
                   <Text style={styles.diagnosisPrimary}>{diagResult.primaryDiagnosis}</Text>
                 ) : null}
                 {diagResult.actionPlan ? (
-                  <Text style={styles.diagnosisSection}>📋 {diagResult.actionPlan}</Text>
+                  <Text style={styles.diagnosisSection}>처치: {diagResult.actionPlan}</Text>
                 ) : null}
                 {diagResult.homeCare ? (
-                  <Text style={styles.diagnosisSection}>🏠 {diagResult.homeCare}</Text>
+                  <Text style={styles.diagnosisSection}>간호: {diagResult.homeCare}</Text>
                 ) : null}
                 {item.ragSources && item.ragSources.filter(Boolean).length > 0 ? (
                   <Text style={styles.ragSources}>
@@ -607,7 +607,7 @@ export default function ConsultScreen() {
               {state.isStreaming && state.streamingContent ? (
                 <View style={styles.aiBubbleWrap}>
                   <View style={styles.aiAvatar}>
-                    <Text style={styles.aiAvatarText}>🐾</Text>
+                    <Text style={styles.aiAvatarText}>AI</Text>
                   </View>
                   <View style={styles.aiBubble}>
                     <Text style={styles.aiBubbleText}>
@@ -639,7 +639,7 @@ export default function ConsultScreen() {
               activeOpacity={0.8}
             >
               <Text style={[styles.modePillText, mode === 'fast' && styles.modePillTextActive]}>
-                ⚡ 빠른 답변
+                빠른 답변
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -648,7 +648,7 @@ export default function ConsultScreen() {
               activeOpacity={0.8}
             >
               <Text style={[styles.modePillText, mode === 'thinking' && styles.modePillTextActive]}>
-                🧠 깊은 분석
+                깊은 분석
               </Text>
             </TouchableOpacity>
           </View>
@@ -673,7 +673,7 @@ export default function ConsultScreen() {
             >
               {imageUploading
                 ? <ActivityIndicator size="small" color="#7A8DA3" />
-                : <Text style={styles.imageBtnIcon}>📷</Text>
+                : <Text style={styles.imageBtnIcon}>사진</Text>
               }
             </TouchableOpacity>
             <TextInput

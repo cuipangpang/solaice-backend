@@ -1,29 +1,28 @@
 import {
+  mentalService,
+  MOOD_EMOJI,
+  MOOD_LABEL,
+  type DiaryEntry,
+  type InteractionCreate,
+  type MentalProfile,
+} from '@/services/mentalService'
+import { petService, type PetProfile } from '@/services/petService'
+import { localCache } from '@/utils/storage'
+import { useRouter } from 'expo-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
   ActivityIndicator,
   Alert,
+  Animated,
   Modal,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Animated } from 'react-native'
-import { localCache } from '@/utils/storage'
-import { petService, type PetProfile } from '@/services/petService'
-import {
-  mentalService,
-  type DiaryEntry,
-  type InteractionCreate,
-  type MentalProfile,
-  MOOD_EMOJI,
-  MOOD_LABEL,
-} from '@/services/mentalService'
 
 // ── 친밀도 게이지 (순수 View 원형) ────────────────────────────────
 function IntimacyRing({ score }: { score: number }) {
@@ -55,13 +54,13 @@ function IntimacyRing({ score }: { score: number }) {
 }
 
 // ── 상호작용 모달 ──────────────────────────────────────────────────
-const INTERACTION_TYPES: { key: InteractionCreate['interaction_type']; label: string; emoji: string }[] = [
-  { key: 'feeding',  label: '밥 주기',   emoji: '🍖' },
-  { key: 'playing',  label: '놀아주기',  emoji: '🎾' },
-  { key: 'grooming', label: '그루밍',    emoji: '✂️' },
-  { key: 'cuddling', label: '안아주기',  emoji: '🤗' },
-  { key: 'training', label: '훈련',      emoji: '🏆' },
-  { key: 'walking',  label: '산책',      emoji: '🚶' },
+const INTERACTION_TYPES: { key: InteractionCreate['interaction_type']; label: string }[] = [
+  { key: 'feeding',  label: '밥 주기'  },
+  { key: 'playing',  label: '놀아주기' },
+  { key: 'grooming', label: '그루밍'   },
+  { key: 'cuddling', label: '안아주기' },
+  { key: 'training', label: '훈련'     },
+  { key: 'walking',  label: '산책'     },
 ]
 
 // ─────────────────────────────────────────────────────────────────
@@ -178,7 +177,6 @@ export default function MentalHealthScreen() {
         <View style={styles.intimacyCard}>
           <IntimacyRing score={intimacy} />
           <View style={styles.moodWrap}>
-            <Text style={styles.moodEmoji}>{MOOD_EMOJI[mood] ?? '😌'}</Text>
             <Text style={styles.moodLabel}>{pet.name}(이)는 지금 {MOOD_LABEL[mood] ?? '평온해요'}</Text>
           </View>
         </View>
@@ -202,29 +200,23 @@ export default function MentalHealthScreen() {
         {/* ── 기능 입구 2×3 그리드 ──────────────────────────────────── */}
         <View style={styles.actionRow}>
           <TouchableOpacity style={styles.actionBtn} onPress={() => setLogModal(true)}>
-            <Text style={styles.actionEmoji}>💝</Text>
             <Text style={styles.actionLabel}>상호작용 기록</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/mental/games')}>
-            <Text style={styles.actionEmoji}>🎮</Text>
             <Text style={styles.actionLabel}>게임 놀기</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/mental/diary')}>
-            <Text style={styles.actionEmoji}>📖</Text>
             <Text style={styles.actionLabel}>오늘 일기</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/mental/media')}>
-            <Text style={styles.actionEmoji}>🎵</Text>
             <Text style={styles.actionLabel}>음악·영상</Text>
             <Text style={styles.actionSub}>반려동물 미디어</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/mental/preference-test')}>
-            <Text style={styles.actionEmoji}>🔍</Text>
             <Text style={styles.actionLabel}>성향 테스트</Text>
             <Text style={styles.actionSub}>10가지 성향 분석</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/mental/profile')}>
-            <Text style={styles.actionEmoji}>🧠</Text>
             <Text style={styles.actionLabel}>심리 프로필</Text>
             <Text style={styles.actionSub}>6가지 특성 분석</Text>
           </TouchableOpacity>
@@ -250,13 +242,12 @@ export default function MentalHealthScreen() {
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>상호작용 기록</Text>
             <View style={styles.typeGrid}>
-              {INTERACTION_TYPES.map(({ key, label, emoji }) => (
+              {INTERACTION_TYPES.map(({ key, label }) => (
                 <TouchableOpacity
                   key={key}
                   style={[styles.typeChip, selectedType === key && styles.typeChipActive]}
                   onPress={() => setSelected(key)}
                 >
-                  <Text style={styles.typeEmoji}>{emoji}</Text>
                   <Text style={[styles.typeLabel, selectedType === key && styles.typeLabelActive]}>{label}</Text>
                 </TouchableOpacity>
               ))}

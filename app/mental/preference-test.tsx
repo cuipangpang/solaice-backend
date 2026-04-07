@@ -69,12 +69,12 @@ const QUESTIONS = [
 ]
 
 const DIMS = [
-  { key: 'social',  label: '사교성', icon: '👥' },
-  { key: 'touch',   label: '스킨십', icon: '🤗' },
-  { key: 'game',    label: '활동성', icon: '🎮' },
-  { key: 'env',     label: '민감도', icon: '👂' },
-  { key: 'comfort', label: '안정감', icon: '😌' },
-  { key: 'happy',   label: '행복도', icon: '😊' },
+  { key: 'social',  label: '사교성' },
+  { key: 'touch',   label: '스킨십' },
+  { key: 'game',    label: '활동성' },
+  { key: 'env',     label: '민감도' },
+  { key: 'comfort', label: '안정감' },
+  { key: 'happy',   label: '행복도' },
 ]
 
 const OPT_VALS = [0.1, 0.4, 0.7, 1.0]
@@ -152,7 +152,7 @@ export default function PreferenceTestScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={styles.resultScroll} showsVerticalScrollIndicator={false}>
-          <Text style={styles.resultTitle}>분석 완료! 🎊</Text>
+          <Text style={styles.resultTitle}>분석 완료</Text>
           <Text style={styles.resultSub}>반려동물의 성향을 분석했어요</Text>
 
           <View style={styles.divider} />
@@ -164,7 +164,6 @@ export default function PreferenceTestScreen() {
             return (
               <View key={dim.key} style={styles.dimRow}>
                 <View style={styles.dimLeft}>
-                  <Text style={styles.dimIcon}>{dim.icon}</Text>
                   <Text style={styles.dimLabel}>{dim.label}</Text>
                 </View>
                 <View style={styles.barBg}>

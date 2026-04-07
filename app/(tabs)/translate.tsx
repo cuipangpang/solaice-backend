@@ -50,9 +50,9 @@ function formatTime(ts: string): string {
 // ── 동물 타입 옵션 ───────────────────────────────────────────
 
 const PET_TYPES: { key: PetType; label: string; emoji: string }[] = [
-  { key: 'cat', label: '고양이', emoji: '🐱' },
-  { key: 'dog', label: '강아지', emoji: '🐶' },
-  { key: 'other', label: '기타', emoji: '🐾' },
+  { key: 'cat', label: '고양이', emoji: '고' },
+  { key: 'dog', label: '강아지', emoji: '강' },
+  { key: 'other', label: '기타', emoji: '기' },
 ]
 
 // ── 반려동물 카드 ─────────────────────────────────────────────
@@ -78,7 +78,7 @@ function PetCard({ pet, onPress }: { pet: Pet; onPress: () => void }) {
           <Text style={styles.timeLabel}>{formatTime(pet.lastMessageTime)}</Text>
         </View>
         <Text style={styles.lastMsg} numberOfLines={1}>
-          {pet.lastMessage || (pet.isMemoMode ? '📝 메모 모드' : '대화를 시작해보세요')}
+          {pet.lastMessage || (pet.isMemoMode ? '메모 모드' : '대화를 시작해보세요')}
         </Text>
       </View>
     </TouchableOpacity>
@@ -246,7 +246,6 @@ export default function TranslateScreen() {
       {/* ── 목록 or 빈 상태 ─────────────────────────────── */}
       {pets.length === 0 ? (
         <View style={styles.emptyWrap}>
-          <Text style={styles.emptyIcon}>🐾</Text>
           <Text style={styles.emptyTitle}>반려동물과 대화해보세요</Text>
           <Text style={styles.emptySub}>소리를 번역하고, 마음을 전해보세요</Text>
           <TouchableOpacity style={styles.startBtn} onPress={openModal} activeOpacity={0.8}>
@@ -328,7 +327,6 @@ export default function TranslateScreen() {
                   <Image source={{ uri: avatarUri }} style={styles.avatarPreview} />
                 ) : (
                   <View style={styles.avatarPlaceholder}>
-                    <Text style={styles.avatarPlaceholderIcon}>📷</Text>
                     <Text style={styles.avatarPlaceholderText}>사진 선택</Text>
                   </View>
                 )}
@@ -448,7 +446,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   avatarImg: { width: 52, height: 52 },
-  avatarEmoji: { fontSize: 26 },
+  avatarEmoji: { fontFamily: 'NotoSerifKR_700Bold', fontSize: 20, color: '#7A8DA3' },
   cardText: { flex: 1 },
   cardRow: {
     flexDirection: 'row',

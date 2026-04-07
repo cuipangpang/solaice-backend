@@ -24,17 +24,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 // ── 모드 설정 ────────────────────────────────────────────────
-const MODES: { key: TranslateMode; label: string; icon: string; hint: string }[] = [
+const MODES: { key: TranslateMode; label: string; hint: string }[] = [
   {
     key: 'human_to_pet',
     label: '인간 → 반려동물',
-    icon: '🧑‍💬',
     hint: '예) 오늘 목욕해야 해, 협조해줘',
   },
   {
     key: 'pet_to_human',
     label: '반려동물 → 인간',
-    icon: '🐾',
     hint: '예) 고양이가 새벽 3시에 계속 울어요',
   },
 ]
@@ -126,7 +124,6 @@ export default function TranslateScreen() {
                 activeOpacity={0.75}
                 onPress={() => handleModeChange(m.key)}
               >
-                <Text style={styles.modeIcon}>{m.icon}</Text>
                 <Text
                   style={[
                     styles.modeBtnText,
@@ -208,9 +205,6 @@ export default function TranslateScreen() {
           {result && (
             <View style={styles.resultCard}>
               <View style={styles.resultHeader}>
-                <Text style={styles.resultIcon}>
-                  {mode === 'human_to_pet' ? '🐾' : '💭'}
-                </Text>
                 <Text style={styles.resultTitle}>
                   {mode === 'human_to_pet' ? '반려동물 언어' : '반려동물의 마음'}
                 </Text>

@@ -45,4 +45,11 @@ export const petService = {
   async deletePet(petId: string): Promise<void> {
     return apiRequest<void>(`/pets/${petId}`, { method: 'DELETE' })
   },
+
+  async updateAvatar(petId: string, avatarUrl: string): Promise<PetProfile> {
+    return apiRequest<PetProfile>(`/pets/${petId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ avatar_url: avatarUrl }),
+    })
+  },
 }

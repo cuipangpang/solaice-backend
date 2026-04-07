@@ -1,3 +1,8 @@
+import { mentalService, type MentalProfile } from '@/services/mentalService'
+import { petService, type PetProfile } from '@/services/petService'
+import { localCache } from '@/utils/storage'
+import { useRouter } from 'expo-router'
+import { useCallback, useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   ScrollView,
@@ -7,21 +12,16 @@ import {
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
-import { useCallback, useEffect, useState } from 'react'
-import { localCache } from '@/utils/storage'
-import { petService, type PetProfile } from '@/services/petService'
-import { mentalService, type MentalProfile } from '@/services/mentalService'
 
 // ─── 차원 구성 ────────────────────────────────────────────────────
 
 const DIMENSIONS = [
-  { key: 'social',  label: '사교성', icon: '👥', unlockLevel: 1, desc: '다른 사람·동물과 어울리기 좋아하는 정도' },
-  { key: 'touch',   label: '스킨십', icon: '🤗', unlockLevel: 1, desc: '신체 접촉을 편안하게 받아들이는 정도' },
-  { key: 'game',    label: '활동성', icon: '🎮', unlockLevel: 2, desc: '놀이·운동에 참여하고 싶어하는 정도' },
-  { key: 'env',     label: '민감도', icon: '👂', unlockLevel: 3, desc: '환경 변화와 소리에 반응하는 민감도' },
-  { key: 'comfort', label: '안정감', icon: '😌', unlockLevel: 4, desc: '스트레스 상황에서 회복하는 속도' },
-  { key: 'happy',   label: '행복도', icon: '😊', unlockLevel: 5, desc: '전반적인 생활 만족도와 행복 지수' },
+  { key: 'social',  label: '사교성', unlockLevel: 1, desc: '다른 사람·동물과 어울리기 좋아하는 정도' },
+  { key: 'touch',   label: '스킨십', unlockLevel: 1, desc: '신체 접촉을 편안하게 받아들이는 정도' },
+  { key: 'game',    label: '활동성', unlockLevel: 2, desc: '놀이·운동에 참여하고 싶어하는 정도' },
+  { key: 'env',     label: '민감도', unlockLevel: 3, desc: '환경 변화와 소리에 반응하는 민감도' },
+  { key: 'comfort', label: '안정감', unlockLevel: 4, desc: '스트레스 상황에서 회복하는 속도' },
+  { key: 'happy',   label: '행복도', unlockLevel: 5, desc: '전반적인 생활 만족도와 행복 지수' },
 ]
 
 // 친밀도 점수 → 레벨 (1~6, 임계값 100점 단위)
@@ -145,7 +145,7 @@ export default function MentalProfileScreen() {
             <Text style={styles.nextLevelLabel}>다음 레벨까지 {Math.round(nextDiff)}점 남았어요</Text>
           )}
           {level >= 6 && (
-            <Text style={styles.nextLevelLabel}>최고 레벨 달성! 🎉</Text>
+            <Text style={styles.nextLevelLabel}>최고 레벨 달성!</Text>
           )}
           <View style={styles.dotRow}>
             {[1, 2, 3, 4, 5, 6].map((lv) => (
@@ -163,14 +163,13 @@ export default function MentalProfileScreen() {
             <View key={dim.key} style={[styles.dimCard, locked && styles.dimCardLocked]}>
               {locked ? (
                 <>
-                  <Text style={styles.lockLabel}>🔒 레벨 {dim.unlockLevel} 해제</Text>
+                  <Text style={styles.lockLabel}>레벨 {dim.unlockLevel} 해제</Text>
                   <Text style={styles.lockSub}>친밀도를 높여 잠금을 해제하세요</Text>
                 </>
               ) : (
                 <>
                   <View style={styles.dimHeader}>
                     <View style={styles.dimLeft}>
-                      <Text style={styles.dimIcon}>{dim.icon}</Text>
                       <Text style={styles.dimLabel}>{dim.label}</Text>
                     </View>
                     <Text style={styles.dimPct}>{pct}%</Text>
@@ -194,7 +193,7 @@ export default function MentalProfileScreen() {
         )}
 
         {/* 하단 힌트 */}
-        <Text style={styles.footerHint}>미션을 완료하면 레벨이 올라가요 🐾</Text>
+        <Text style={styles.footerHint}>미션을 완료하면 레벨이 올라가요</Text>
       </ScrollView>
     </SafeAreaView>
   )

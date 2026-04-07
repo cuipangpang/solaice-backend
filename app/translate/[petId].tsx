@@ -294,7 +294,7 @@ function HumanBubble({ message, petType, onPlay, isPlaying }: BubbleProps) {
         ) : null}
         {message.translatedText && (
           <View style={styles.petSoundRow}>
-            <Text style={styles.petSoundLabel}>🐾 {petLabel} 버전</Text>
+            <Text style={styles.petSoundLabel}>{petLabel} 버전</Text>
             {message.translatedText.startsWith('http') ? (
               <TouchableOpacity
                 style={styles.playRowSmall}
@@ -592,7 +592,7 @@ export default function PetConversationScreen() {
 
   if (!pet) return null
 
-  const petEmoji = pet.type === 'cat' ? '🐱' : pet.type === 'dog' ? '🐶' : '🐾'
+  const petEmoji = pet.type === 'cat' ? '고' : pet.type === 'dog' ? '강' : '기'
 
   // ── 번역 버튼 비활성화 조건 ───────────────────────────────
   const isTranslateDisabled =
@@ -623,13 +623,13 @@ export default function PetConversationScreen() {
                 {pet.avatarUri ? (
                   <Image source={{ uri: pet.avatarUri }} style={styles.headerAvatarImg} />
                 ) : (
-                  <Text style={{ fontSize: 22 }}>{petEmoji}</Text>
+                  <Text style={{ fontSize: 18, fontFamily: 'NotoSerifKR_700Bold', color: '#7A8DA3' }}>{petEmoji}</Text>
                 )}
               </View>
               <View style={{ marginLeft: 10 }}>
                 <Text style={styles.headerName}>{pet.name}</Text>
                 <Text style={styles.headerMode}>
-                  {pet.isMemoMode ? '📝 메모 모드' : '🔄 번역 모드'}
+                  {pet.isMemoMode ? '메모 모드' : '번역 모드'}
                 </Text>
               </View>
             </View>
@@ -682,7 +682,7 @@ export default function PetConversationScreen() {
                   activeOpacity={0.8}
                 >
                   <Text style={[styles.toggleLabel, activeMode === 'pet' && styles.toggleLabelActive]}>
-                    🐾 Pet Talk
+                    Pet Talk
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -691,7 +691,7 @@ export default function PetConversationScreen() {
                   activeOpacity={0.8}
                 >
                   <Text style={[styles.toggleLabel, activeMode === 'human' && styles.toggleLabelActive]}>
-                    💬 You Talk
+                    You Talk
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -819,7 +819,7 @@ export default function PetConversationScreen() {
                     <ActivityIndicator color="#fff" size="small" />
                   ) : (
                     <Text style={styles.translateBtnLabel}>
-                      {activeMode === 'pet' ? '🐾 번역하기' : '💬 전달하기'}
+                      {activeMode === 'pet' ? '번역하기' : '전달하기'}
                     </Text>
                   )}
                 </TouchableOpacity>

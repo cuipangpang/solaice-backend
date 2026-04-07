@@ -1,15 +1,15 @@
+import { petService } from '@/services/petService'
+import { localCache } from '@/utils/storage'
+import { useRouter } from 'expo-router'
+import { useEffect, useState } from 'react'
 import {
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ScrollView,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter, useLocalSearchParams } from 'expo-router'
-import { localCache } from '@/utils/storage'
-import { petService } from '@/services/petService'
-import { useEffect, useState } from 'react'
 
 interface Game {
   key: string
@@ -23,17 +23,17 @@ interface Game {
 
 const ALL_GAMES: Game[] = [
   // 고양이 게임
-  { key: 'laser_pointer', emoji: '🔴', title: '레이저 포인터',   desc: '빨간 점을 잡아봐요!',        duration: '30초', xp: 30, species: 'cat' },
-  { key: 'feather_wand',  emoji: '🪶', title: '깃털 완드',       desc: '흔들리는 깃털을 노려봐요',     duration: '30초', xp: 25, species: 'cat' },
-  { key: 'paper_ball',    emoji: '📰', title: '종이공',           desc: '통통 튀는 공을 쳐봐요',       duration: '30초', xp: 20, species: 'cat' },
-  { key: 'treat_hunt',    emoji: '🍗', title: '간식 사냥',        desc: '숨겨진 간식을 찾아봐요',       duration: '30초', xp: 35, species: 'cat' },
-  { key: 'tunnel_play',   emoji: '🕳', title: '터널 놀이',        desc: '터널을 통과해봐요',            duration: '30초', xp: 25, species: 'cat' },
+  { key: 'laser_pointer', emoji: '', title: '레이저 포인터',   desc: '빨간 점을 잡아봐요!',        duration: '30초', xp: 30, species: 'cat' },
+  { key: 'feather_wand',  emoji: '', title: '깃털 완드',       desc: '흔들리는 깃털을 노려봐요',     duration: '30초', xp: 25, species: 'cat' },
+  { key: 'paper_ball',    emoji: '', title: '종이공',           desc: '통통 튀는 공을 쳐봐요',       duration: '30초', xp: 20, species: 'cat' },
+  { key: 'treat_hunt',    emoji: '', title: '간식 사냥',        desc: '숨겨진 간식을 찾아봐요',       duration: '30초', xp: 35, species: 'cat' },
+  { key: 'tunnel_play',   emoji: '', title: '터널 놀이',        desc: '터널을 통과해봐요',            duration: '30초', xp: 25, species: 'cat' },
   // 강아지 게임
-  { key: 'fetch',         emoji: '⚾', title: '공 던지기',        desc: '공을 잡아와요!',              duration: '30초', xp: 30, species: 'dog' },
-  { key: 'tug_of_war',    emoji: '🪢', title: '줄다리기',         desc: '힘껏 당겨봐요',               duration: '30초', xp: 35, species: 'dog' },
-  { key: 'hide_seek',     emoji: '🙈', title: '숨바꼭질',         desc: '발바닥을 찾아봐요',            duration: '30초', xp: 25, species: 'dog' },
-  { key: 'agility',       emoji: '🏃', title: '어질리티',         desc: '장애물을 순서대로 통과해요',   duration: '30초', xp: 40, species: 'dog' },
-  { key: 'frisbee',       emoji: '🥏', title: '프리스비',         desc: '프리스비를 잡아봐요',          duration: '30초', xp: 30, species: 'dog' },
+  { key: 'fetch',         emoji: '', title: '공 던지기',        desc: '공을 잡아와요!',              duration: '30초', xp: 30, species: 'dog' },
+  { key: 'tug_of_war',    emoji: '', title: '줄다리기',         desc: '힘껏 당겨봐요',               duration: '30초', xp: 35, species: 'dog' },
+  { key: 'hide_seek',     emoji: '', title: '숨바꼭질',         desc: '발바닥을 찾아봐요',            duration: '30초', xp: 25, species: 'dog' },
+  { key: 'agility',       emoji: '', title: '어질리티',         desc: '장애물을 순서대로 통과해요',   duration: '30초', xp: 40, species: 'dog' },
+  { key: 'frisbee',       emoji: '', title: '프리스비',         desc: '프리스비를 잡아봐요',          duration: '30초', xp: 30, species: 'dog' },
 ]
 
 export default function GamesScreen() {
@@ -76,22 +76,22 @@ export default function GamesScreen() {
       {/* 탭 */}
       <View style={styles.tabRow}>
         <TouchableOpacity style={[styles.tab, tab === 'cat' && styles.tabActive]} onPress={() => setTab('cat')}>
-          <Text style={[styles.tabText, tab === 'cat' && styles.tabTextActive]}>🐱 고양이</Text>
+          <Text style={[styles.tabText, tab === 'cat' && styles.tabTextActive]}>고양이</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.tab, tab === 'dog' && styles.tabActive]} onPress={() => setTab('dog')}>
-          <Text style={[styles.tabText, tab === 'dog' && styles.tabTextActive]}>🐶 강아지</Text>
+          <Text style={[styles.tabText, tab === 'dog' && styles.tabTextActive]}>강아지</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {games.map((game) => (
           <TouchableOpacity key={game.key} style={styles.gameCard} activeOpacity={0.85} onPress={() => handlePlay(game)}>
-            <Text style={styles.gameEmoji}>{game.emoji}</Text>
+            <View style={styles.gameAccent} />
             <View style={styles.gameInfo}>
               <Text style={styles.gameTitle}>{game.title}</Text>
               <Text style={styles.gameDesc}>{game.desc}</Text>
               <View style={styles.gameMeta}>
-                <Text style={styles.gameDuration}>⏱ {game.duration}</Text>
+                <Text style={styles.gameDuration}>{game.duration}</Text>
                 <Text style={styles.gameXp}>+{game.xp} XP</Text>
               </View>
             </View>
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   tabTextActive:{ color: '#2B3A55', fontFamily: 'Pretendard-SemiBold' },
 
   gameCard:   { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 18, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
-  gameEmoji:  { fontSize: 36, marginRight: 14 },
+  gameAccent: { width: 4, height: 44, borderRadius: 2, backgroundColor: '#BDE0FE', marginRight: 14 },
   gameInfo:   { flex: 1 },
   gameTitle:  { fontFamily: 'Pretendard-SemiBold', fontSize: 16, color: '#2B3A55', marginBottom: 3 },
   gameDesc:   { fontFamily: 'Pretendard-Regular', fontSize: 13, color: '#7A8DA3', marginBottom: 6 },

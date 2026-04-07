@@ -60,12 +60,12 @@ export const MOOD_LABEL: Record<string, string> = {
 }
 
 export const MOOD_EMOJI: Record<string, string> = {
-  happy:   '😸',
-  calm:    '😌',
-  anxious: '😟',
-  bored:   '😐',
-  excited: '🤩',
-  sad:     '😢',
+  happy:   '행복',
+  calm:    '평온',
+  anxious: '불안',
+  bored:   '심심',
+  excited: '신남',
+  sad:     '슬픔',
 }
 
 // ─── API 함수 ────────────────────────────────────────────────────

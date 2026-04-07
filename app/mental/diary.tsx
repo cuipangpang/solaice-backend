@@ -69,7 +69,7 @@ export default function DiaryScreen() {
   }
 
   function handleShare() {
-    Alert.alert('준비 중', '곧 업데이트될 예정이에요 🙏')
+    Alert.alert('준비 중', '곧 업데이트될 예정이에요')
   }
 
   return (
@@ -103,14 +103,14 @@ export default function DiaryScreen() {
               <Text style={styles.highlightTitle}>오늘의 하이라이트</Text>
               {makeHighlights(entry).map((h, i) => (
                 <Text key={i} style={styles.highlightItem}>
-                  <Text style={styles.highlightBullet}>✦ </Text>{h}
+                  <Text style={styles.highlightBullet}>·  </Text>{h}
                 </Text>
               ))}
             </View>
 
             <View style={styles.badgeWrap}>
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>오늘 하루도 사랑받았어요 💛</Text>
+                <Text style={styles.badgeText}>오늘 하루도 사랑받았어요</Text>
               </View>
             </View>
           </ScrollView>

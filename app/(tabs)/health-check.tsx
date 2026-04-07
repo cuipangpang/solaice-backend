@@ -28,13 +28,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 // ── 模块配置 ──────────────────────────────────────────────────
 
-const MODULES: { key: ModuleKey; label: string; icon: string }[] = [
-  { key: "skin",      label: "피부",   icon: "🐾" },
-  { key: "oral",      label: "구강",   icon: "🦷" },
-  { key: "ear",       label: "귀",     icon: "👂" },
-  { key: "eye",       label: "눈",     icon: "👁️" },
-  { key: "excrement", label: "변",     icon: "💩" },
-  { key: "vomit",     label: "구토물", icon: "🤢" },
+const MODULES: { key: ModuleKey; label: string }[] = [
+  { key: "skin",      label: "피부"   },
+  { key: "oral",      label: "구강"   },
+  { key: "ear",       label: "귀"     },
+  { key: "eye",       label: "눈"     },
+  { key: "excrement", label: "변"     },
+  { key: "vomit",     label: "구토물" },
 ];
 
 const EYE_STEPS = ["① 양안 전경", "② 왼눈 클로즈업", "③ 오른눈 클로즈업"] as const;
@@ -49,7 +49,7 @@ const URGENCY_CONFIG: Record<
     bg:          "#90CAF9",
     textPrimary: "#1A3A5C",
     textSub:     "rgba(26,58,92,0.7)",
-    tagline:     "당신은 정성스러운 반려동물 부모님이에요 ✨",
+    tagline:     "당신은 정성스러운 반려동물 부모님이에요",
     headline:    "오늘 상태 양호",
   },
   注意: {
@@ -63,7 +63,7 @@ const URGENCY_CONFIG: Record<
     bg:          "#FFB5A7",
     textPrimary: "#5C1A0F",
     textSub:     "rgba(92,26,15,0.7)",
-    tagline:     "제때 발견하셨어요, 아주 중요한 일이에요 ❤️",
+    tagline:     "제때 발견하셨어요, 아주 중요한 일이에요",
     headline:    "동물병원 방문을 권장합니다",
   },
 };
@@ -206,8 +206,8 @@ export default function HealthCheckScreen() {
       "이미지 소스 선택",
       undefined,
       [
-        { text: "📷  촬영",          onPress: () => executeEyeStepPick(stepIndex, getCameraAsset)  },
-        { text: "🖼️  앨범에서 선택",  onPress: () => executeEyeStepPick(stepIndex, getGalleryAsset) },
+        { text: "촬영",          onPress: () => executeEyeStepPick(stepIndex, getCameraAsset)  },
+        { text: "앨범에서 선택",  onPress: () => executeEyeStepPick(stepIndex, getGalleryAsset) },
         { text: "취소", style: "cancel" },
       ],
     );
@@ -300,7 +300,7 @@ export default function HealthCheckScreen() {
 
       // 4. 成功提示
       setSaved(true);
-      Alert.alert("저장됨", "검사 결과가 건강 기록에 저장되었습니다 ✓");
+      Alert.alert("저장됨", "검사 결과가 건강 기록에 저장되었습니다.");
     } catch (error) {
       Alert.alert("저장 실패", "네트워크를 확인 후 다시 시도하세요. 검사 결과에는 영향이 없습니다");
     } finally {
@@ -333,7 +333,6 @@ export default function HealthCheckScreen() {
               onPress={() => handleSelectModule(m.key)}
               activeOpacity={0.75}
             >
-              <Text style={styles.moduleIcon}>{m.icon}</Text>
               <Text style={[styles.moduleLabel, selectedModule === m.key && styles.moduleLabelActive]}>
                 {m.label}
               </Text>
@@ -416,7 +415,7 @@ export default function HealthCheckScreen() {
             {result.is_content_filtered && (
               <View style={styles.filteredBanner}>
                 <Text style={styles.filteredBannerText}>
-                  ⚠️  이 이미지가 콘텐츠 안전 심사에 걸렸습니다. 아래는 참고 결과이며, 더 선명한 사진으로 다시 시도해 보세요
+                  이 이미지가 콘텐츠 안전 심사에 걸렸습니다. 아래는 참고 결과이며, 더 선명한 사진으로 다시 시도해 보세요
                 </Text>
               </View>
             )}
@@ -502,7 +501,6 @@ export default function HealthCheckScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>행동 권고</Text>
               <View style={styles.adviceCard}>
-                <Text style={styles.adviceCardIcon}>📋</Text>
                 <Text style={styles.adviceCardText}>{result.action_plan}</Text>
               </View>
             </View>
@@ -512,7 +510,6 @@ export default function HealthCheckScreen() {
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>가정 간호</Text>
                 <View style={styles.adviceCard}>
-                  <Text style={styles.adviceCardIcon}>🏠</Text>
                   <Text style={styles.adviceCardText}>{result.home_care}</Text>
                 </View>
               </View>
@@ -523,7 +520,7 @@ export default function HealthCheckScreen() {
               {/* 就医状态时额外显示"查找附近医院"次级按钮 */}
               {result.urgency === "就医" && (
                 <TouchableOpacity style={styles.secondaryBtn} activeOpacity={0.8}>
-                  <Text style={styles.secondaryBtnText}>🏥  근처 동물병원 찾기</Text>
+                  <Text style={styles.secondaryBtnText}>근처 동물병원 찾기</Text>
                 </TouchableOpacity>
               )}
               {/* 保存到档案 */}
@@ -535,7 +532,7 @@ export default function HealthCheckScreen() {
               >
                 {saving
                   ? <ActivityIndicator size="small" color="#2B3A55" />
-                  : <Text style={styles.primaryBtnText}>{saved ? "✓ 기록에 저장됨" : "기록에 저장"}</Text>
+                  : <Text style={styles.primaryBtnText}>{saved ? "저장됨" : "기록에 저장"}</Text>
                 }
               </TouchableOpacity>
               {/* 重新检测 */}
@@ -559,7 +556,7 @@ export default function HealthCheckScreen() {
         <View style={styles.emergencyBackdrop}>
           <View style={styles.emergencySheet}>
             <View style={styles.emergencyRedBar} />
-            <Text style={styles.emergencyTitle}>🚨 이상 감지</Text>
+            <Text style={styles.emergencyTitle}>이상 감지</Text>
             <Text style={styles.emergencyBody}>
               {result?.action_plan ?? "이미지에서 명백한 혈흔이 감지되었습니다. 즉시 가까운 동물병원 응급실을 방문하세요."}
             </Text>
@@ -570,7 +567,7 @@ export default function HealthCheckScreen() {
               style={styles.emergencyPrimaryBtn}
               onPress={() => setShowEmergency(false)}
             >
-              <Text style={styles.emergencyPrimaryBtnText}>📞  근처 동물병원에 즉시 연락</Text>
+              <Text style={styles.emergencyPrimaryBtnText}>근처 동물병원에 즉시 연락</Text>
             </Pressable>
             <Pressable
               style={styles.emergencyDismiss}
@@ -598,7 +595,7 @@ function SymptomCard({ symptom }: { symptom: Symptom }) {
         </View>
       </View>
       {symptom.location.length > 0 && (
-        <Text style={styles.symptomLocation}>📍 {symptom.location}</Text>
+        <Text style={styles.symptomLocation}>{symptom.location}</Text>
       )}
       {symptom.evidence.length > 0 && (
         <Text style={styles.symptomEvidence}>{symptom.evidence}</Text>

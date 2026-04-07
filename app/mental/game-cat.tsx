@@ -28,12 +28,12 @@ import { mentalService } from '@/services/mentalService'
 
 const GAME_DURATION = 30  // seconds
 
-const GAME_META: Record<string, { emoji: string; title: string }> = {
-  laser_pointer: { emoji: '🔴', title: '레이저 포인터' },
-  feather_wand:  { emoji: '🪶', title: '깃털 완드' },
-  paper_ball:    { emoji: '📰', title: '종이공' },
-  treat_hunt:    { emoji: '🍗', title: '간식 사냥' },
-  tunnel_play:   { emoji: '🕳', title: '터널 놀이' },
+const GAME_META: Record<string, { title: string }> = {
+  laser_pointer: { title: '레이저 포인터' },
+  feather_wand:  { title: '깃털 완드' },
+  paper_ball:    { title: '종이공' },
+  treat_hunt:    { title: '간식 사냥' },
+  tunnel_play:   { title: '터널 놀이' },
 }
 
 // ── 공통 훅: 타이머 ──────────────────────────────────────────────
@@ -87,10 +87,12 @@ function LaserPointerGame({ onScore }: { onScore: (n: number) => void }) {
   return (
     <View style={gs.arena}>
       <Pressable
-        style={[gs.laserDot, { left: dotPos.x - 16, top: dotPos.y - 16 }]}
+        style={[gs.laserDotHit, { left: dotPos.x - 20, top: dotPos.y - 20 }]}
         onPress={() => onScore(1)}
         hitSlop={12}
-      />
+      >
+        <Text style={gs.laserDotEmoji}>🔴</Text>
+      </Pressable>
       <Text style={gs.arenaHint}>빨간 점을 탭하세요!</Text>
     </View>
   )
@@ -121,7 +123,7 @@ function FeatherWandGame({ onScore }: { onScore: (n: number) => void }) {
         <View style={gs.sweetZone} />
       </View>
       <Animated.View style={[gs.feather, { transform: [{ translateX: tx }] }]}>
-        <Text style={{ fontSize: 40 }}>🪶</Text>
+        <Text style={gs.featherEmoji}>🪶</Text>
       </Animated.View>
       <TouchableOpacity style={[gs.bigBtn, inZone && gs.bigBtnActive]} onPress={() => inZone && onScore(1)}>
         <Text style={gs.bigBtnText}>{inZone ? '지금 탭!' : '타이밍 맞춰 탭'}</Text>
@@ -153,7 +155,9 @@ function PaperBallGame({ onScore }: { onScore: (n: number) => void }) {
     <View style={gs.arena}>
       <Text style={gs.arenaHint}>공을 계속 탭해봐요!</Text>
       <TouchableOpacity onPress={tapBall} activeOpacity={0.8}>
-        <Animated.Text style={[gs.paperBall, { transform: [{ translateY: bounce }, { scale }] }]}>📰</Animated.Text>
+        <Animated.Text style={[gs.paperBallEmoji, { transform: [{ translateY: bounce }, { scale }] }]}>
+          📰
+        </Animated.Text>
       </TouchableOpacity>
     </View>
   )
@@ -182,8 +186,8 @@ function TreatHuntGame({ onScore }: { onScore: (n: number) => void }) {
       <View style={gs.bowlGrid}>
         {[0, 1, 2, 3].map((i) => (
           <TouchableOpacity key={i} style={gs.bowl} onPress={() => tapBowl(i)}>
-            <Text style={{ fontSize: 40 }}>
-              {revealed.includes(i) ? (i === hiddenIdx ? '🍗' : '❌') : '🥣'}
+            <Text style={gs.bowlLabel}>
+              {revealed.includes(i) ? (i === hiddenIdx ? '🍗' : '×') : '🥣'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -215,11 +219,13 @@ function TunnelPlayGame({ onScore }: { onScore: (n: number) => void }) {
   return (
     <View style={gs.arena}>
       <Text style={gs.arenaHint}>고양이가 나올 출구를 탭해요!</Text>
-      <Animated.Text style={[gs.cat, { transform: [{ translateX: catX }] }]}>🐱</Animated.Text>
+      <Animated.Text style={[gs.catEmoji, { transform: [{ translateX: catX }] }]}>
+        🐱
+      </Animated.Text>
       <View style={gs.tunnelExits}>
         {[0, 1, 2].map((i) => (
           <TouchableOpacity key={i} style={[gs.exit, i === exitIdx && gs.exitActive]} onPress={() => tapExit(i)}>
-            <Text style={{ fontSize: 30 }}>🕳</Text>
+            <Text style={gs.tunnelHoleEmoji}>🕳</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -285,7 +291,7 @@ export default function GameCatScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
           <Text style={styles.backArrow}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{meta.emoji} {meta.title}</Text>
+        <Text style={styles.headerTitle}>{meta.title}</Text>
         <View style={{ width: 32 }} />
       </View>
 
@@ -304,7 +310,7 @@ export default function GameCatScreen() {
       {/* 게임 영역 */}
       {!started ? (
         <View style={styles.startWrap}>
-          <Text style={styles.startEmoji}>{meta.emoji}</Text>
+          <View style={styles.startAccent} />
           <Text style={styles.startTitle}>{meta.title}</Text>
           <TouchableOpacity style={styles.startBtn} onPress={start}>
             <Text style={styles.startBtnText}>시작!</Text>
@@ -312,7 +318,7 @@ export default function GameCatScreen() {
         </View>
       ) : done ? (
         <View style={styles.startWrap}>
-          <Text style={styles.startEmoji}>🎉</Text>
+          <Text style={styles.confetti}>🎉</Text>
           <Text style={styles.startTitle}>게임 종료!</Text>
           <Text style={styles.scoreText}>최종 점수: {score}점</Text>
           <TouchableOpacity style={[styles.startBtn, saving && { opacity: 0.5 }]} onPress={saveResult} disabled={saving}>
@@ -339,11 +345,12 @@ const styles = StyleSheet.create({
   hudValueWarn:{ color: '#D32F2F' },
 
   startWrap:   { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
-  startEmoji:  { fontSize: 72 },
+  startAccent: { width: 48, height: 6, borderRadius: 3, backgroundColor: '#BDE0FE' },
   startTitle:  { fontFamily: 'NotoSerifKR_700Bold', fontSize: 22, color: '#2B3A55' },
   scoreText:   { fontFamily: 'Pretendard-Regular', fontSize: 16, color: '#7A8DA3' },
   startBtn:    { backgroundColor: '#BDE0FE', borderRadius: 16, paddingHorizontal: 40, paddingVertical: 14, marginTop: 8 },
   startBtnText:{ fontFamily: 'Pretendard-SemiBold', fontSize: 18, color: '#2B3A55' },
+  confetti:    { fontSize: 40 },
 })
 
 // 게임 컴포넌트 공용 스타일
@@ -352,25 +359,29 @@ const gs = StyleSheet.create({
   arenaHint:  { position: 'absolute', top: 20, fontFamily: 'Pretendard-Regular', fontSize: 14, color: '#7A8DA3' },
 
   // 레이저 포인터
-  laserDot: { position: 'absolute', width: 32, height: 32, borderRadius: 16, backgroundColor: '#FF3B30', shadowColor: '#FF3B30', shadowOpacity: 0.6, shadowRadius: 10, elevation: 6 },
+  laserDotHit:   { position: 'absolute', width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  laserDotEmoji: { fontSize: 32 },
 
   // 깃털
-  zoneBar:   { width: 280, height: 20, backgroundColor: '#E8EFF8', borderRadius: 10, overflow: 'hidden', position: 'absolute', top: 80 },
-  sweetZone: { position: 'absolute', left: '40%', width: '20%', height: '100%', backgroundColor: '#90CAF9', borderRadius: 10 },
-  feather:   { marginBottom: 40 },
+  zoneBar:     { width: 280, height: 20, backgroundColor: '#E8EFF8', borderRadius: 10, overflow: 'hidden', position: 'absolute', top: 80 },
+  sweetZone:   { position: 'absolute', left: '40%', width: '20%', height: '100%', backgroundColor: '#90CAF9', borderRadius: 10 },
+  feather:      { marginBottom: 40 },
+  featherEmoji: { fontSize: 52 },
   bigBtn:    { marginTop: 60, backgroundColor: '#F4F8FF', borderRadius: 16, paddingHorizontal: 32, paddingVertical: 16, borderWidth: 2, borderColor: '#E8EFF8' },
   bigBtnActive: { backgroundColor: '#BDE0FE', borderColor: '#BDE0FE' },
   bigBtnText:{ fontFamily: 'Pretendard-SemiBold', fontSize: 16, color: '#2B3A55' },
 
   // 종이공
-  paperBall: { fontSize: 80 },
+  paperBallEmoji: { fontSize: 72 },
 
   // 간식 사냥
-  bowlGrid: { flexDirection: 'row', flexWrap: 'wrap', width: 220, gap: 16, justifyContent: 'center', marginTop: 40 },
-  bowl:     { width: 80, height: 80, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: 16, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  bowlGrid:  { flexDirection: 'row', flexWrap: 'wrap', width: 220, gap: 16, justifyContent: 'center', marginTop: 40 },
+  bowl:      { width: 80, height: 80, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: 16, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  bowlLabel: { fontSize: 28 },
 
   // 터널
-  cat:         { fontSize: 48, position: 'absolute', top: '40%' },
+  catEmoji:     { fontSize: 44, position: 'absolute', top: '40%' },
+  tunnelHoleEmoji: { fontSize: 40 },
   tunnelExits: { position: 'absolute', bottom: 60, flexDirection: 'row', gap: 20 },
   exit:        { width: 80, height: 80, alignItems: 'center', justifyContent: 'center', borderRadius: 16, backgroundColor: '#fff', borderWidth: 2, borderColor: 'transparent' },
   exitActive:  { borderColor: '#BDE0FE', backgroundColor: '#EAF6FF' },

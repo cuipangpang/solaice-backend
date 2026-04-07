@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Linking,
   Modal,
@@ -14,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
+import * as ImagePicker from 'expo-image-picker'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { healthRecordService, type HealthRecord, type HealthStats } from '@/services/healthRecordService'
@@ -29,9 +31,9 @@ type ScreenState = 'loading' | 'error' | 'no-pet' | 'loaded'
 type SpeciesKey = 'cat' | 'dog' | 'other'
 
 const SPECIES_INFO: Record<SpeciesKey, { label: string; icon: string }> = {
-  cat:   { label: '고양이', icon: '🐱' },
-  dog:   { label: '강아지', icon: '🐶' },
-  other: { label: '기타',   icon: '🐾' },
+  cat:   { label: '고양이', icon: '고' },
+  dog:   { label: '강아지', icon: '강' },
+  other: { label: '기타',   icon: '기' },
 }
 
 const URGENCY_LABEL: Record<string, string> = {
@@ -53,6 +55,8 @@ export default function RecordsScreen() {
   const [vaccines, setVaccines] = useState<VaccineRecord[]>([])
   const [stats,   setStats]   = useState<HealthStats | null>(null)
   const [showModal, setShowModal] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   // ── 表单状态 ─────────────────────────────────────────────────
   const [formName,    setFormName]    = useState('')
@@ -86,6 +90,7 @@ export default function RecordsScreen() {
       ])
 
       setPet(petData)
+      setAvatarUrl(petData.avatar_url)
       setRecords(recordsData)
       setVaccines(vaccinesData)
       setStats(statsData)
@@ -98,6 +103,57 @@ export default function RecordsScreen() {
       } else {
         setState('error')
       }
+    }
+  }
+
+  // ── 头像上传 ──────────────────────────────────────────────────
+
+  async function pickAndUploadAvatar() {
+    if (!pet) return
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (status !== 'granted') {
+      Alert.alert('권한 필요', '사진 접근 권한이 필요해요')
+      return
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    })
+
+    if (result.canceled) return
+
+    const asset = result.assets[0]
+    setUploadingAvatar(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', {
+        uri: asset.uri,
+        type: asset.mimeType ?? 'image/jpeg',
+        name: 'avatar.jpg',
+      } as any)
+
+      const response = await fetch(
+        `${API_BASE}/upload/avatar/${pet.id}`,
+        {
+          method: 'POST',
+          body: formData,
+          headers: { 'Content-Type': 'multipart/form-data' },
+        },
+      )
+
+      if (!response.ok) throw new Error('업로드 실패')
+
+      const data = await response.json()
+      await petService.updateAvatar(pet.id, data.avatar_url)
+      setAvatarUrl(data.avatar_url)
+      Alert.alert('완료', '프로필 사진이 업데이트되었어요 🐾')
+    } catch {
+      Alert.alert('오류', '사진 업로드에 실패했어요. 다시 시도해 주세요.')
+    } finally {
+      setUploadingAvatar(false)
     }
   }
 
@@ -198,7 +254,6 @@ export default function RecordsScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centered}>
-          <Text style={styles.errorIcon}>😿</Text>
           <Text style={styles.errorText}>로드 실패, 네트워크 연결을 확인해주세요</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={loadAll}>
             <Text style={styles.retryBtnText}>탭하여 재시도</Text>
@@ -233,7 +288,6 @@ export default function RecordsScreen() {
         {state === 'no-pet' ? (
           /* ── 无档案引导 ─────────────────────────────────── */
           <View style={styles.emptyWrap}>
-            <Text style={styles.emptyIcon}>🐾</Text>
             <Text style={styles.emptyTitle}>반려동물 프로필이 없습니다</Text>
             <Text style={styles.emptySub}>프로필을 만들면 검사 결과가 건강 타임라인에 자동으로 저장됩니다</Text>
             <TouchableOpacity style={styles.primaryBtn} onPress={openEditModal}>
@@ -245,9 +299,27 @@ export default function RecordsScreen() {
             {/* ── 宠物信息卡 ──────────────────────────────── */}
             <View style={styles.petCard}>
               <View style={styles.petCardLeft}>
-                <View style={styles.petIconWrap}>
-                  <Text style={styles.petSpeciesIcon}>{SPECIES_INFO[speciesKey].icon}</Text>
-                </View>
+                <TouchableOpacity
+                  onPress={pickAndUploadAvatar}
+                  disabled={uploadingAvatar}
+                  activeOpacity={0.8}
+                  style={styles.petIconWrap}
+                >
+                  {avatarUrl ? (
+                    <Image
+                      source={{ uri: avatarUrl }}
+                      style={{ width: 52, height: 52, borderRadius: 26 }}
+                    />
+                  ) : (
+                    <Text style={styles.petSpeciesIcon}>{SPECIES_INFO[speciesKey].icon[0]}</Text>
+                  )}
+                  <View style={styles.avatarEditBadge}>
+                    {uploadingAvatar
+                      ? <ActivityIndicator size="small" color="#fff" />
+                      : <Text style={styles.avatarEditIcon}>✎</Text>
+                    }
+                  </View>
+                </TouchableOpacity>
                 <View style={styles.petCardInfo}>
                   <Text style={styles.petName}>{pet!.name}</Text>
                   <Text style={styles.petMeta}>
@@ -352,7 +424,7 @@ export default function RecordsScreen() {
                       </Text>
                       {v.next_due_at && (
                         <Text style={[styles.vaccineNext, isOverdue && styles.vaccineOverdue]}>
-                          {isOverdue ? '⚠️  만료됨 · ' : '다음 접종: '}
+                          {isOverdue ? '[만료됨]  ' : '다음 접종: '}
                           {new Date(v.next_due_at).toLocaleDateString('ko-KR', {
                             year: 'numeric', month: 'short', day: 'numeric',
                           })}
@@ -372,7 +444,7 @@ export default function RecordsScreen() {
         {/* ── 生成就医报告 ──────────────────────────────────── */}
         {state === 'loaded' && (
           <TouchableOpacity style={styles.reportBtn} onPress={handleGenerateReport} activeOpacity={0.8}>
-            <Text style={styles.reportBtnText}>📄 진료 보고서 생성</Text>
+            <Text style={styles.reportBtnText}>진료 보고서 생성</Text>
           </TouchableOpacity>
         )}
 
@@ -429,7 +501,13 @@ export default function RecordsScreen() {
                     onPress={() => setFormSpecies(s)}
                     activeOpacity={0.75}
                   >
-                    <Text style={styles.speciesBtnIcon}>{SPECIES_INFO[s].icon}</Text>
+                    {s === 'cat' ? (
+                      <Image source={require('../../assets/icons/cat.png')} style={styles.speciesBtnImage} />
+                    ) : s === 'dog' ? (
+                      <Image source={require('../../assets/icons/dog.png')} style={styles.speciesBtnImage} />
+                    ) : (
+                      <Text style={styles.speciesBtnIcon}>{SPECIES_INFO[s].icon[0]}</Text>
+                    )}
                     <Text style={[
                       styles.speciesBtnLabel,
                       formSpecies === s && styles.speciesBtnLabelActive,
@@ -530,7 +608,7 @@ const styles = StyleSheet.create({
     color:      '#7A8DA3',
     marginTop:  12,
   },
-  errorIcon: { fontSize: 40, marginBottom: 12 },
+  errorIcon: { fontSize: 40, marginBottom: 12 }, // kept for layout compat
   errorText: {
     fontFamily: 'Pretendard-Regular',
     fontSize:   15,
@@ -613,7 +691,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight:    12,
   },
-  petSpeciesIcon: { fontSize: 28 },
+  avatarEditBadge: {
+    position:        'absolute',
+    bottom:          0,
+    right:           0,
+    width:           20,
+    height:          20,
+    borderRadius:    10,
+    backgroundColor: '#90CAF9',
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  avatarEditIcon: {
+    color:    '#FFFFFF',
+    fontSize: 11,
+  },
+  petSpeciesIcon: { fontFamily: 'NotoSerifKR_700Bold', fontSize: 20, color: '#2B3A55' },
   petCardInfo:    { flex: 1 },
   petName: {
     fontFamily: 'NotoSerifKR_700Bold',
@@ -843,7 +936,8 @@ const styles = StyleSheet.create({
     borderColor:     '#90CAF9',
     backgroundColor: 'rgba(144,202,249,0.12)',
   },
-  speciesBtnIcon:  { fontSize: 22, marginBottom: 4 },
+  speciesBtnIcon:  { fontFamily: 'NotoSerifKR_700Bold', fontSize: 18, color: '#2B3A55', marginBottom: 4 },
+  speciesBtnImage: { width: 52, height: 52, resizeMode: 'contain', marginBottom: 10 },
   speciesBtnLabel: {
     fontFamily: 'Pretendard-Medium',
     fontSize:   13,

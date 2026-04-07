@@ -1,11 +1,12 @@
 from contextlib import asynccontextmanager
 import logging
+import os
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from app.routers import pets, health_records, vaccine_records, upload, reports
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,10 @@ app = FastAPI(
     version="2.0.0",
     lifespan=lifespan,
 )
+
+# 确保头像上传目录存在并挂载静态文件
+os.makedirs("/opt/solaice/uploads/avatars", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="/opt/solaice/uploads"), name="uploads")
 
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 
