@@ -121,51 +121,56 @@ export default function LoginScreen() {
             resizeMode="contain"
           />
           <Text style={s.appName}>솔레이스</Text>
+          <Text style={s.appSub}>로그인 없이 바로 시작하세요</Text>
         </View>
 
         {/* ── 소셜 로그인 버튼 ──────────────────────────────── */}
-        <View style={s.btnSection}>
-          <SocialBtn
-            IconComp={<KakaoIcon />}
-            label="카카오로 계속하기"
-            bgColor="#FEE500"
-            textColor="#191919"
-            onPress={() => Alert.alert('카카오 로그인', '카카오 로그인 연동 준비 중입니다.')}
-          />
-          <SocialBtn
-            IconComp={<NaverIcon />}
-            label="네이버로 계속하기"
-            bgColor="#03C75A"
-            textColor="#FFFFFF"
-            onPress={() => Alert.alert('네이버 로그인', '네이버 로그인 연동 준비 중입니다.')}
-          />
-          <SocialBtn
-            IconComp={<GoogleIcon />}
-            label="Google로 계속하기"
-            bgColor="#FFFFFF"
-            textColor="#2B3A55"
-            borderColor="#E8EFF6"
-            onPress={() => Alert.alert('Google 로그인', 'Google 로그인 연동 준비 중입니다.')}
-          />
-          {Platform.OS === 'ios' && (
+        {false && (
+          <View style={s.btnSection}>
             <SocialBtn
-              IconComp={<AppleIcon />}
-              label="Apple로 계속하기"
-              bgColor="#000000"
-              textColor="#FFFFFF"
-              onPress={() => Alert.alert('Apple 로그인', 'Apple 로그인 연동 준비 중입니다.')}
+              IconComp={<KakaoIcon />}
+              label="카카오로 계속하기"
+              bgColor="#FEE500"
+              textColor="#191919"
+              onPress={() => Alert.alert('카카오 로그인', '카카오 로그인 연동 준비 중입니다.')}
             />
-          )}
-        </View>
+            <SocialBtn
+              IconComp={<NaverIcon />}
+              label="네이버로 계속하기"
+              bgColor="#03C75A"
+              textColor="#FFFFFF"
+              onPress={() => Alert.alert('네이버 로그인', '네이버 로그인 연동 준비 중입니다.')}
+            />
+            <SocialBtn
+              IconComp={<GoogleIcon />}
+              label="Google로 계속하기"
+              bgColor="#FFFFFF"
+              textColor="#2B3A55"
+              borderColor="#E8EFF6"
+              onPress={() => Alert.alert('Google 로그인', 'Google 로그인 연동 준비 중입니다.')}
+            />
+            {Platform.OS === 'ios' && (
+              <SocialBtn
+                IconComp={<AppleIcon />}
+                label="Apple로 계속하기"
+                bgColor="#000000"
+                textColor="#FFFFFF"
+                onPress={() => Alert.alert('Apple 로그인', 'Apple 로그인 연동 준비 중입니다.')}
+              />
+            )}
+          </View>
+        )}
 
         {/* ── 구분선 ───────────────────────────────────────── */}
-        <View style={s.dividerSection}>
-          <Divider />
-        </View>
+        {false && (
+          <View style={s.dividerSection}>
+            <Divider />
+          </View>
+        )}
 
         {/* ── 게스트 모드 버튼 ──────────────────────────────── */}
         <Pressable
-          style={({ pressed }) => [s.guestBtn, pressed && { opacity: 0.6 }]}
+          style={({ pressed }) => [s.guestBtn, pressed && { opacity: 0.8 }]}
           onPress={handleGuest}
           accessibilityRole="button"
           accessibilityLabel="게스트로 시작하기"
@@ -311,6 +316,12 @@ const s = StyleSheet.create({
     fontSize: 28,
     color: '#2B3A55',
   },
+  appSub: {
+    fontFamily: 'Pretendard-Regular',
+    fontSize: 15,
+    color: '#7A8DA3',
+    marginTop: 8,
+  },
 
   // 소셜 버튼 영역
   btnSection: {
@@ -357,16 +368,22 @@ const s = StyleSheet.create({
 
   // 게스트 버튼
   guestBtn: {
-    height: 52,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#BDE0FE',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 16,
-    minHeight: 44,
+    shadowColor: '#BDE0FE',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.40,
+    shadowRadius: 16,
+    elevation: 4,
   },
   guestBtnText: {
-    fontFamily: 'Pretendard-Medium',
-    fontSize: 15,
-    color: '#7A8DA3',
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize: 16,
+    color: '#2B3A55',
   },
 
   // 하단 약관

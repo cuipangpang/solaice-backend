@@ -89,12 +89,17 @@ function TugOfWarGame({ onScore }: { onScore: (n: number) => void }) {
   const [power, setPower] = useState(50)   // 0-100, 60 이상 = 점수
 
   function tap() {
-    setPower((p) => {
-      const next = Math.min(100, p + 7)
-      if (next >= 60 && p < 60) onScore(1)
-      return next
-    })
+    setPower((p) => Math.min(100, p + 7))
   }
+
+  // setter 콜백 안에서 onScore를 직접 호출하면 렌더 중 다른 컴포넌트 setState 유발 →
+  // useEffect로 power 값 변화를 감지해 안전하게 처리
+  useEffect(() => {
+    if (power >= 60) {
+      onScore(1)
+      setPower(0)
+    }
+  }, [power, onScore])
 
   // 서서히 줄어듦
   useEffect(() => {
