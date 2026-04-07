@@ -145,7 +145,14 @@ export default function HomeScreen() {
             activeOpacity={0.8}
             onPress={() => router.push('/(tabs)/records')}
           >
-            <View style={styles.profileAvatarPlaceholder} />
+            {petData.avatar_url ? (
+              <Image
+                source={{ uri: petData.avatar_url }}
+                style={{ width: 60, height: 60, borderRadius: 30 }}
+              />
+            ) : (
+              <View style={styles.profileAvatarPlaceholder} />
+            )}
             <View style={styles.profileTextColumn}>
               <Text style={styles.profileName}>{petData.name}</Text>
               <Text style={styles.profileBreed}>
