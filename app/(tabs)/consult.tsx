@@ -588,6 +588,13 @@ export default function ConsultScreen() {
         </View>
       ) : null}
 
+      {/* 면책 배너 */}
+      <View style={styles.disclaimerBanner}>
+        <Text style={styles.disclaimerBannerText}>
+          AI 상담은 참고용입니다. 응급 상황 시 즉시 동물병원을 방문하세요.
+        </Text>
+      </View>
+
       {/* 메시지 + 입력 */}
       <KeyboardAvoidingView
         style={styles.flex}
@@ -802,6 +809,18 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(244,67,54,0.3)',
   },
   errorText: { fontFamily: 'Pretendard-Regular', fontSize: 13, color: '#5C1A0F' },
+  disclaimerBanner: {
+    backgroundColor: '#E8F4FD',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#B3D9F2',
+  },
+  disclaimerBannerText: {
+    fontFamily: 'Pretendard-Regular',
+    fontSize: 11,
+    color: '#2C6E9B',
+    textAlign: 'center',
+  },
 
   messageList: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
 

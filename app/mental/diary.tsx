@@ -115,11 +115,13 @@ export default function DiaryScreen() {
             </View>
           </ScrollView>
 
+          {/* 공유 버튼 — 공유 기능 준비 완료 전까지 숨김 처리
           <View style={styles.bottomWrap}>
             <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
               <Text style={styles.shareBtnText}>공유하기</Text>
             </TouchableOpacity>
           </View>
+          */}
         </>
       ) : (
         <View style={styles.emptyWrap}>

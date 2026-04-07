@@ -540,6 +540,13 @@ export default function HealthCheckScreen() {
                 <Text style={styles.secondaryBtnText}>다시 검사</Text>
               </TouchableOpacity>
             </View>
+
+            {/* ── 면책 조항 ────────────────────────────────────── */}
+            <View style={styles.disclaimerBox}>
+              <Text style={styles.disclaimerText}>
+                ⚠️ 이 결과는 AI가 제공하는 참고 정보이며, 전문 수의사의 진단을 대체하지 않습니다. 반려동물의 건강이 우려되시면 가까운 동물병원을 방문해 주세요.
+              </Text>
+            </View>
           </>
         )}
 
@@ -951,4 +958,18 @@ const styles = StyleSheet.create({
   },
 
   bottomPad: { height: 100 },
+  disclaimerBox: {
+    backgroundColor: '#FFF9E6',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: '#F5A623',
+  },
+  disclaimerText: {
+    fontSize: 11,
+    color: '#8B6914',
+    lineHeight: 16,
+    fontFamily: 'Pretendard-Regular',
+  },
 });

@@ -1,6 +1,7 @@
 import {
   Alert,
   Image,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -184,14 +185,14 @@ export default function LoginScreen() {
             {'계속 진행하면 '}
             <Text
               style={s.termsLink}
-              onPress={() => Alert.alert('서비스 이용약관', '이용약관 내용은 준비 중입니다.')}
+              onPress={() => Linking.openURL('https://cuipangpang.github.io/solaice-terms')}
             >
               서비스 이용약관
             </Text>
             {' 및 '}
             <Text
               style={s.termsLink}
-              onPress={() => Alert.alert('개인정보처리방침', '개인정보처리방침 내용은 준비 중입니다.')}
+              onPress={() => Linking.openURL('https://cuipangpang.github.io/solaice-privacy')}
             >
               개인정보처리방침
             </Text>
