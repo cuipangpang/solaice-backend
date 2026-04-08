@@ -185,14 +185,14 @@ export default function LoginScreen() {
             {'계속 진행하면 '}
             <Text
               style={s.termsLink}
-              onPress={() => Linking.openURL('https://cuipangpang.github.io/solaice-terms')}
+              onPress={() => Linking.openURL('https://cuipangpang.github.io/solaice-privacy/terms.html')}
             >
               서비스 이용약관
             </Text>
             {' 및 '}
             <Text
               style={s.termsLink}
-              onPress={() => Linking.openURL('https://cuipangpang.github.io/solaice-privacy')}
+              onPress={() => Linking.openURL('https://cuipangpang.github.io/solaice-privacy/')}
             >
               개인정보처리방침
             </Text>
