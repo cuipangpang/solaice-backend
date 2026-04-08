@@ -58,7 +58,15 @@ export default function HomeScreen() {
 
   // ── 기존 로그아웃/설정 로직 ─────────────────────────────
   async function handleLogout() {
-    await AsyncStorage.clear();
+    // AsyncStorage.clear() 대신 로그인 관련 key만 제거
+    // 'cached_pet_id' 는 삭제하지 않아 반려동물 데이터 유지
+    await AsyncStorage.multiRemove([
+      'guest_mode',
+      'user_id',
+      'user_mode',
+      'auth_token',
+      'user_token',
+    ]);
     router.replace("/login");
   }
 
