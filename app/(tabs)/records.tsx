@@ -442,7 +442,7 @@ export default function RecordsScreen() {
         )}
 
         {/* ── 生成就医报告 ──────────────────────────────────── */}
-        {state === 'loaded' && (
+        {false && state === 'loaded' && (
           <TouchableOpacity style={styles.reportBtn} onPress={handleGenerateReport} activeOpacity={0.8}>
             <Text style={styles.reportBtnText}>진료 보고서 생성</Text>
           </TouchableOpacity>
