@@ -38,8 +38,9 @@ import ReAnimated, {
   withTiming,
 } from 'react-native-reanimated'
 
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { Message, Pet } from '@/types/translate'
-import { getPets, getMessages, addMessage, updateMessage } from '@/utils/translateStorage'
+import { getPets, getMessages, addMessage, updateMessage, saveMessages } from '@/utils/translateStorage'
 import { translatePetToHuman, translateHumanToPet } from '@/services/translateService'
 import { useAudioRecorder } from '@/hooks/useAudioRecorder'
 
@@ -153,6 +154,16 @@ function formatDuration(secs: number): string {
   const m = Math.floor(secs / 60)
   const s = secs % 60
   return `${m}:${s.toString().padStart(2, '0')}`
+}
+
+function formatDate(iso: string): string {
+  const d = new Date(iso)
+  const today = new Date()
+  if (d.toDateString() === today.toDateString()) return '오늘'
+  const y = d.getFullYear()
+  const mo = (d.getMonth() + 1).toString().padStart(2, '0')
+  const day = d.getDate().toString().padStart(2, '0')
+  return `${y}.${mo}.${day}`
 }
 
 // ── 로딩 점 애니메이션 ────────────────────────────────────────
@@ -333,7 +344,66 @@ function HumanBubble({ message, petType, onPlay, isPlaying }: BubbleProps) {
   )
 }
 
-function MemoBubble({ message }: { message: Message }) {
+function MemoBubble({ message, isMemoMode, onToggle, showDateSep }: {
+  message: Message
+  isMemoMode?: boolean
+  onToggle?: (id: string) => void
+  showDateSep?: boolean
+}) {
+  if (isMemoMode) {
+    const completed = message.completed ?? false
+    return (
+      <View>
+        {showDateSep && (
+          <View style={{ alignItems: 'center', marginVertical: 10 }}>
+            <View style={{ backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 12, paddingVertical: 4, paddingHorizontal: 12 }}>
+              <Text style={{ fontSize: 12, color: '#888' }}>{formatDate(message.timestamp)}</Text>
+            </View>
+          </View>
+        )}
+        <View style={{ alignItems: 'flex-end', marginRight: 16, marginBottom: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <TouchableOpacity
+              onPress={() => onToggle?.(message.id)}
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: 11,
+                borderWidth: 1.5,
+                borderColor: '#C8B8E8',
+                backgroundColor: completed ? '#C8B8E8' : 'transparent',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              {completed && <Text style={{ color: '#fff', fontSize: 12 }}>✓</Text>}
+            </TouchableOpacity>
+            <View style={{
+              backgroundColor: completed ? '#E8E8EE' : '#C8B8E8',
+              borderRadius: 18,
+              borderBottomRightRadius: 4,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              maxWidth: '75%',
+            }}>
+              <Text style={{
+                fontSize: 15,
+                fontFamily: 'Pretendard-Regular',
+                color: completed ? '#AAAAAA' : '#2D2D3A',
+                lineHeight: 22,
+                textDecorationLine: completed ? 'line-through' : 'none',
+              }}>
+                {message.humanText}
+              </Text>
+            </View>
+          </View>
+          <Text style={{ fontSize: 11, color: '#BBBBC5', marginTop: 3, alignSelf: 'flex-end', marginRight: 16 }}>
+            {formatTimestamp(message.timestamp)}
+          </Text>
+        </View>
+      </View>
+    )
+  }
   return (
     <View style={styles.rowCenter}>
       <View style={styles.bubbleMemo}>
@@ -406,6 +476,16 @@ export default function PetConversationScreen() {
   const patchMessage = useCallback((id: string, updates: Partial<Message>) => {
     setMessages(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m))
     updateMessage(petId, id, updates)
+  }, [petId])
+
+  const toggleComplete = useCallback((messageId: string) => {
+    setMessages(prev => {
+      const updated = prev.map(msg =>
+        msg.id === messageId ? { ...msg, completed: !msg.completed } : msg
+      )
+      saveMessages(petId, updated)
+      return updated
+    })
   }, [petId])
 
   // ── Pet Talk 녹음 핸들러 ──────────────────────────────────
@@ -560,14 +640,29 @@ export default function PetConversationScreen() {
       type: 'memo',
       humanText: text,
       timestamp: new Date().toISOString(),
+      completed: false,
     })
   }, [memoText, appendMessage])
 
   // ── 렌더 아이템 ───────────────────────────────────────────
-  const renderItem = useCallback(({ item }: { item: Message }) => {
+  const renderItem = useCallback(({ item, index }: { item: Message; index: number }) => {
     if (!pet) return null
     const isPlaying = playingId === item.id
-    if (item.type === 'memo') return <MemoBubble message={item} />
+    if (item.type === 'memo') {
+      const prevMsg = messages[index - 1]
+      const showDateSep = pet.isMemoMode && (
+        !prevMsg ||
+        new Date(prevMsg.timestamp).toDateString() !== new Date(item.timestamp).toDateString()
+      )
+      return (
+        <MemoBubble
+          message={item}
+          isMemoMode={pet.isMemoMode}
+          onToggle={toggleComplete}
+          showDateSep={showDateSep}
+        />
+      )
+    }
     if (item.type === 'pet_to_human') {
       return (
         <PetBubble
@@ -588,7 +683,7 @@ export default function PetConversationScreen() {
         isPlaying={isPlaying}
       />
     )
-  }, [pet, playingId, play])
+  }, [pet, playingId, play, messages, toggleComplete])
 
   if (!pet) return null
 

@@ -22,6 +22,7 @@ export interface Message {
   petSoundKey?: string        // ex) "cat_happy"
   timestamp: string
   isLoading?: boolean
+  completed?: boolean
 }
 
 export interface PetToHumanResponse {
