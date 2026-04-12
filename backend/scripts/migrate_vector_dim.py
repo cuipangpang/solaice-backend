@@ -33,6 +33,8 @@ ASYNCPG_DSN: str = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://"
 
 STEPS = [
     # ── knowledge_base ────────────────────────────────────────
+    # 재임포트 전 전체 초기화 (차원 불일치 데이터 포함)
+    "TRUNCATE TABLE knowledge_base",
     "DROP INDEX IF EXISTS idx_knowledge_base_embedding",
     "ALTER TABLE knowledge_base DROP COLUMN IF EXISTS embedding",
     "ALTER TABLE knowledge_base ADD COLUMN embedding vector(1024)",
