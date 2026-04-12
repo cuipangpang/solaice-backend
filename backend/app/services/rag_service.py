@@ -8,6 +8,7 @@ v4 추가:
 - bm25_search: PostgreSQL tsvector 기반 키워드 검색
 - rrf_fusion: Reciprocal Rank Fusion (Dense + BM25 통합)
 - retrieve_knowledge: HyDE 벡터 + 원본 쿼리 벡터 평균, RRF 융합, U형 정렬까지 적용
+- mmr_select: Maximal Marginal Relevance (λ=0.7, 관련성 70% + 다양성 30%)
 """
 
 import logging
@@ -30,6 +31,53 @@ def _get_reranker():
             logger.warning("[rag] CrossEncoder 로드 실패 (rerank 건너뜀): %s", exc)
             _reranker = None
     return _reranker
+
+
+# ── MMR 다양성 선택 ───────────────────────────────────────────────────────────
+
+def mmr_select(candidates: list[dict], top_k: int, lambda_: float = 0.7) -> list[dict]:
+    """
+    Maximal Marginal Relevance로 관련성과 다양성을 균형 있게 선택.
+    lambda_=0.7: 관련성 70%, 다양성 30%
+
+    관련성: CrossEncoder score (min-max 정규화)
+    다양성: 문서 간 토큰 집합 Jaccard 유사도
+    """
+    if len(candidates) <= top_k:
+        return candidates
+
+    # min-max 정규화
+    scores = [d["score"] for d in candidates]
+    min_s, max_s = min(scores), max(scores)
+    rng = max_s - min_s if max_s != min_s else 1.0
+    norm = [(s - min_s) / rng for s in scores]
+
+    # 토큰 집합 (소문자 공백 분리)
+    tok = [set(d["content"].lower().split()) for d in candidates]
+
+    selected: list[int] = []
+    remaining = list(range(len(candidates)))
+
+    while len(selected) < top_k and remaining:
+        best_i, best_score = None, float("-inf")
+        for i in remaining:
+            rel = norm[i]
+            if not selected:
+                mmr = rel
+            else:
+                # 이미 선택된 문서들과의 최대 Jaccard 유사도
+                max_sim = max(
+                    len(tok[i] & tok[j]) / len(tok[i] | tok[j])
+                    if tok[i] | tok[j] else 0.0
+                    for j in selected
+                )
+                mmr = lambda_ * rel - (1 - lambda_) * max_sim
+            if mmr > best_score:
+                best_score, best_i = mmr, i
+        selected.append(best_i)
+        remaining.remove(best_i)
+
+    return [candidates[i] for i in selected]
 
 
 # ── U형 정렬 ──────────────────────────────────────────────────────────────────
@@ -220,8 +268,8 @@ async def retrieve_knowledge(
             except Exception as exc:
                 logger.warning("[rag] rerank 실패, RRF 점수 순 사용: %s", exc)
 
-        # ── 5. U형 정렬 후 top_k_final 반환 ────────────────────────
-        top = candidates[:top_k_final]
+        # ── 5. MMR 다양성 선택 → U형 정렬 ─────────────────────────
+        top = mmr_select(candidates, top_k_final, lambda_=0.7)
         return u_shape_sort(top)
 
     except Exception as exc:

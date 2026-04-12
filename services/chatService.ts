@@ -92,6 +92,11 @@ export async function sendChatMessage(params: {
 }): Promise<void> {
   const { sessionId, petId, content, imageUrl, imageData, mode, onToken, onDone, onError, signal } = params
 
+  // <thinking_process>...</thinking_process> 블록을 UI에서 제거
+  function stripThinking(text: string): string {
+    return text.replace(/<thinking_process>[\s\S]*?<\/thinking_process>/gi, '').trim()
+  }
+
   return new Promise((resolve) => {
     const url = `${BASE_URL}/chat/message`
     console.log('[chatService] → SSE 요청 URL:', url)
@@ -99,6 +104,10 @@ export async function sendChatMessage(params: {
       session_id: sessionId, pet_id: petId, content, mode,
       has_image: !!(imageData || imageUrl),
     })
+
+    // 스트리밍 thinking 필터링 상태
+    let tokenAccum = ''
+    let displayedLen = 0
 
     const es = new EventSource(url, {
       headers: { 'Content-Type': 'application/json' },
@@ -123,10 +132,20 @@ export async function sendChatMessage(params: {
         const parsed = JSON.parse(event.data)
 
         if (parsed.type === 'token') {
-          onToken(parsed.content ?? '')
+          // <thinking_process> 블록이 완성될 때까지 누적 후 필터링
+          tokenAccum += parsed.content ?? ''
+          // 완성된 thinking 블록 제거 + 아직 열려있는 태그 이후 숨김
+          const displayable = stripThinking(tokenAccum)
+            .replace(/<thinking_process>[\s\S]*$/i, '')
+          const newPart = displayable.slice(displayedLen)
+          if (newPart) {
+            displayedLen = displayable.length
+            onToken(newPart)
+          }
         } else if (parsed.type === 'done') {
-          // reply 변환 (snake_case → camelCase)
-          let reply: string | DiagnosisResult = parsed.reply
+          // reply 변환 (snake_case → camelCase) + thinking 블록 제거
+          let reply: string | DiagnosisResult =
+            typeof parsed.reply === 'string' ? stripThinking(parsed.reply) : parsed.reply
           if (typeof parsed.reply === 'object' && parsed.reply !== null) {
             reply = {
               urgency: parsed.reply.urgency,
