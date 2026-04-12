@@ -15,7 +15,9 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { localCache } from '@/utils/storage'
 
 // ── 타입 ──────────────────────────────────────────────────────
 
@@ -87,6 +89,20 @@ function MemoRow({
   )
 }
 
+// ── 직렬화 헬퍼 ──────────────────────────────────────────────
+// AsyncStorage는 JSON 문자열만 저장 가능하므로
+// Date 객체 → ISO string 변환 후 저장, 읽을 때 다시 Date로 복원
+
+type StoredMemoItem = Omit<MemoItem, 'createdAt'> & { createdAt: string }
+
+function toStored(item: MemoItem): StoredMemoItem {
+  return { ...item, createdAt: item.createdAt.toISOString() }
+}
+
+function fromStored(item: StoredMemoItem): MemoItem {
+  return { ...item, createdAt: new Date(item.createdAt) }
+}
+
 // ── 메인 ──────────────────────────────────────────────────────
 
 export default function MemoScreen() {
@@ -94,8 +110,42 @@ export default function MemoScreen() {
   const flatRef = useRef<FlatList<MemoItem>>(null)
   const [items, setItems] = useState<MemoItem[]>([])
   const [input, setInput] = useState('')
+  const memoKeyRef = useRef('memo_messages_default')
 
-  const handleSend = useCallback(() => {
+  // ── 앱 시작 시 저장된 메모 로드 ─────────────────────────────
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const petId = await localCache.getPetId()
+        const key = petId ? `memo_messages_${petId}` : 'memo_messages_default'
+        memoKeyRef.current = key
+
+        const stored = await AsyncStorage.getItem(key)
+        if (stored) {
+          const parsed: StoredMemoItem[] = JSON.parse(stored)
+          setItems(parsed.map(fromStored))
+        }
+      } catch (e) {
+        console.log('메모 로드 실패', e)
+      }
+    }
+    load()
+  }, [])
+
+  // ── 메모 저장 헬퍼 ───────────────────────────────────────────
+  const saveMessages = useCallback(async (newItems: MemoItem[]) => {
+    try {
+      await AsyncStorage.setItem(
+        memoKeyRef.current,
+        JSON.stringify(newItems.map(toStored)),
+      )
+    } catch (e) {
+      console.log('메모 저장 실패', e)
+    }
+  }, [])
+
+  // ── 메시지 전송 + 저장 ───────────────────────────────────────
+  const handleSend = useCallback(async () => {
     const text = input.trim()
     if (!text) return
     const newItem: MemoItem = {
@@ -104,10 +154,12 @@ export default function MemoScreen() {
       createdAt: new Date(),
       type: 'user',
     }
-    setItems((prev) => [...prev, newItem])
+    const updated = [...items, newItem]
+    setItems(updated)
     setInput('')
     setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 80)
-  }, [input])
+    await saveMessages(updated)
+  }, [input, items, saveMessages])
 
   const renderItem = useCallback(
     ({ item, index }: { item: MemoItem; index: number }) => (

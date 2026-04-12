@@ -21,7 +21,10 @@
         "NSCameraUsageDescription": "반려동물의 건강 상태를 AI로 분석하기 위해 카메라를 사용합니다.",
         "NSMicrophoneUsageDescription": "반려동물 소리를 번역하기 위해 마이크를 사용합니다.",
         "NSPhotoLibraryUsageDescription": "반려동물 사진을 업로드하여 건강을 분석합니다.",
-        "NSLocationWhenInUseUsageDescription": "가까운 동물병원을 찾기 위해 위치를 사용합니다."
+        "NSLocationWhenInUseUsageDescription": "가까운 동물병원을 찾기 위해 위치를 사용합니다.",
+        "bundleIdentifier": "com.cuipangpang.solaice",
+        "buildNumber": "1",
+        "supportsTablet": false
       }
     },
     "android": {
