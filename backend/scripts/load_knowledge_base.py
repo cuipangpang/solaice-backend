@@ -94,60 +94,46 @@ async def load_knowledge_base() -> None:
     from app.services.embedding_service import get_embedding
     from sqlalchemy import text
 
-    BATCH_SIZE = 10
     inserted = 0
     skipped = 0
 
-    async with AsyncSessionLocal() as db:
-        for i in range(0, len(all_texts), BATCH_SIZE):
-            batch = all_texts[i : i + BATCH_SIZE]
-
-            for item in batch:
-                content = item["content"]
-                source = item["source"]
-                try:
-                    # 중복 확인 (COUNT(*) 방식)
-                    dup_result = await db.execute(
-                        text("SELECT COUNT(*) FROM knowledge_base WHERE content = :c"),
-                        {"c": content},
-                    )
-                    if dup_result.scalar() > 0:
-                        skipped += 1
-                        continue
-
-                    # 임베딩 생성
-                    embedding = await get_embedding(content)
-
-                    # pgvector는 list를 직접 받지 못함 → 문자열 변환
-                    # SQLAlchemy text()에서 ::vector 캐스팅이 파라미터 바인딩과 충돌하므로
-                    # CAST(... AS vector) 방식 사용
-                    embedding_str = "[" + ",".join(str(v) for v in embedding) + "]"
-
-                    # 삽입
-                    await db.execute(
-                        text(
-                            """
-                            INSERT INTO knowledge_base (content, source, embedding)
-                            VALUES (:content, :source, CAST(:embedding AS vector))
-                            """
-                        ),
-                        {
-                            "content": content,
-                            "source": source,
-                            "embedding": embedding_str,
-                        },
-                    )
-                    inserted += 1
-
-                except Exception as exc:
-                    print(f"  ⚠️  항목 스킵 ({exc.__class__.__name__}): {exc} | {content[:40]}…")
+    # 항목마다 독립 세션 사용 — 한 항목 오류가 다음 항목에 영향 없도록
+    for i, item in enumerate(all_texts):
+        content = item["content"]
+        source = item["source"]
+        try:
+            async with AsyncSessionLocal() as db:
+                # 중복 확인
+                dup_result = await db.execute(
+                    text("SELECT COUNT(*) FROM knowledge_base WHERE content = :content"),
+                    {"content": content},
+                )
+                if (dup_result.scalar() or 0) > 0:
                     skipped += 1
+                    continue
 
-            await db.commit()
+                # 임베딩 생성
+                embedding = await get_embedding(content)
+                embedding_str = "[" + ",".join(str(v) for v in embedding) + "]"
 
-            progress = min(i + BATCH_SIZE, len(all_texts))
-            pct = progress / len(all_texts) * 100
-            print(f"  진행: {progress}/{len(all_texts)} ({pct:.1f}%)  삽입:{inserted} 스킵:{skipped}")
+                # 삽입
+                await db.execute(
+                    text(
+                        """INSERT INTO knowledge_base (content, source, embedding)
+                           VALUES (:content, :source, CAST(:embedding AS vector))"""
+                    ),
+                    {"content": content, "source": source, "embedding": embedding_str},
+                )
+                await db.commit()
+                inserted += 1
+
+        except Exception as exc:
+            print(f"  ⚠️  항목 스킵 ({exc.__class__.__name__}): {str(exc)[:120]} | {content[:40]}…")
+            skipped += 1
+
+        if (i + 1) % 50 == 0 or (i + 1) == len(all_texts):
+            pct = (i + 1) / len(all_texts) * 100
+            print(f"  진행: {i+1}/{len(all_texts)} ({pct:.1f}%)  삽입:{inserted} 스킵:{skipped}")
 
     print(f"\n✅ 완료!")
     print(f"   삽입: {inserted}개")
