@@ -140,7 +140,7 @@ async def load_knowledge_base() -> None:
                     inserted += 1
 
                 except Exception as exc:
-                    print(f"  ⚠️  항목 스킵 ({exc.__class__.__name__}): {content[:40]}…")
+                    print(f"  ⚠️  항목 스킵 ({exc.__class__.__name__}): {exc} | {content[:40]}…")
                     skipped += 1
 
             await db.commit()
