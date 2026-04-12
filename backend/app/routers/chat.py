@@ -200,14 +200,15 @@ async def send_message(
         if intent == "greeting":
             # 인사 → 일반 대화 모드
             new_stage = "chat"
-        elif stage in ("completed", "chat"):
-            # 이전 진단 완료 또는 일반 대화 중 새 메시지
+        elif stage in ("completed", "chat", "diagnosis"):
+            # 진단 완료 / 일반 대화 / 진단 후 재방문 — intent 기반 재판단
+            # "diagnosis" 포함: follow_up_questions가 있어 completed로 전환 안 된 경우도 처리
             if intent == "veterinary":
                 # 구체적 수의학 증상 언급 → 새 진단 사이클 시작
                 new_stage = "questioning"
                 new_cycle_start_turn = new_turn_count  # 사이클 리셋
             else:
-                # 일반 질문 → chat 유지 (LLM이 자연스럽게 증상 탐색)
+                # greeting/general/기타 → chat 리셋 (JSON 보고서 출력 방지)
                 new_stage = "chat"
         else:
             # questioning 단계: cycle 기준 4턴 후 진단

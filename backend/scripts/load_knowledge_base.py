@@ -106,12 +106,12 @@ async def load_knowledge_base() -> None:
                 content = item["content"]
                 source = item["source"]
                 try:
-                    # 중복 확인
-                    existing = await db.execute(
-                        text("SELECT id FROM knowledge_base WHERE content = :c LIMIT 1"),
+                    # 중복 확인 (COUNT(*) 방식)
+                    dup_result = await db.execute(
+                        text("SELECT COUNT(*) FROM knowledge_base WHERE content = :c"),
                         {"c": content},
                     )
-                    if existing.fetchone():
+                    if dup_result.scalar() > 0:
                         skipped += 1
                         continue
 
