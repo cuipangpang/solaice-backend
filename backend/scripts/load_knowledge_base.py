@@ -2,7 +2,9 @@
 pet_medical_seed/processed/deduped.json 을 읽어서
 knowledge_base 테이블에 데이터를 로드하는 스크립트.
 
-실행: cd backend && python scripts/load_knowledge_base.py
+실행:
+  cd backend && python scripts/load_knowledge_base.py           # 중복 스킵
+  cd backend && python scripts/load_knowledge_base.py --force  # TRUNCATE 후 전체 재삽입
 """
 
 import asyncio
@@ -12,6 +14,8 @@ from pathlib import Path
 
 # 백엔드 루트를 sys.path에 추가
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+FORCE_RELOAD = "--force" in sys.argv
 
 
 def extract_texts(item: dict) -> tuple[list[str], str]:
@@ -94,10 +98,41 @@ async def load_knowledge_base() -> None:
     from app.services.embedding_service import get_embedding
     from sqlalchemy import text
 
+    # ── 3-1. 현재 DB 상태 진단 ───────────────────────────────
+    async with AsyncSessionLocal() as db:
+        count_result = await db.execute(text("SELECT COUNT(*) FROM knowledge_base"))
+        total_rows = count_result.scalar() or 0
+        print(f"\n🗄️  현재 knowledge_base 행 수: {total_rows}")
+
+        if all_texts:
+            first_content = all_texts[0]["content"]
+            dup_check = await db.execute(
+                text("SELECT COUNT(*) FROM knowledge_base WHERE content = :content"),
+                {"content": first_content},
+            )
+            dup_count = dup_check.scalar() or 0
+            print(f"🔍 첫 번째 항목 중복 여부: {dup_count}개 존재")
+            print(f"   내용 미리보기: {first_content[:80]}…")
+
+    # ── 3-2. --force: TRUNCATE 후 재삽입 ────────────────────
+    if FORCE_RELOAD:
+        print("\n⚠️  --force 옵션: knowledge_base TRUNCATE 후 전체 재삽입합니다.")
+        async with AsyncSessionLocal() as db:
+            await db.execute(text("TRUNCATE TABLE knowledge_base"))
+            await db.commit()
+        print("✅ TRUNCATE 완료\n")
+    else:
+        if total_rows > 0:
+            print(
+                f"\n💡 힌트: DB에 이미 {total_rows}개 행 존재."
+                " 전체 재삽입하려면 --force 옵션을 추가하세요.\n"
+            )
+
+    # ── 4. 항목별 독립 세션으로 삽입 ─────────────────────────
     inserted = 0
     skipped = 0
+    zero_vector_count = 0
 
-    # 항목마다 독립 세션 사용 — 한 항목 오류가 다음 항목에 영향 없도록
     for i, item in enumerate(all_texts):
         content = item["content"]
         source = item["source"]
@@ -114,6 +149,14 @@ async def load_knowledge_base() -> None:
 
                 # 임베딩 생성
                 embedding = await get_embedding(content)
+
+                # zero vector 감지 — embedding API 실패 신호
+                if all(v == 0.0 for v in embedding[:10]):
+                    zero_vector_count += 1
+                    print(f"  ⚠️  zero vector 감지, 스킵: {content[:60]}…")
+                    skipped += 1
+                    continue
+
                 embedding_str = "[" + ",".join(str(v) for v in embedding) + "]"
 
                 # 삽입
@@ -138,6 +181,8 @@ async def load_knowledge_base() -> None:
     print(f"\n✅ 완료!")
     print(f"   삽입: {inserted}개")
     print(f"   스킵(중복/오류): {skipped}개")
+    if zero_vector_count:
+        print(f"   ⚠️  zero vector 감지: {zero_vector_count}개 — embedding API 상태를 확인하세요.")
 
 
 if __name__ == "__main__":
