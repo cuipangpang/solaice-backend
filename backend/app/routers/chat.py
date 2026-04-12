@@ -119,11 +119,29 @@ async def send_message(
     """
     # ── 사전 처리: 스트리밍 전에 모든 DB/Redis 작업 완료 ───────────────
     try:
-        # Step 1: Redis 상태 읽기
+        # Step 1: Redis 상태 읽기 (miss 시 PostgreSQL fallback)
         chat_history = await redis_service.get_chat_history(request.pet_id, request.session_id)
         session_state = await redis_service.get_session_state(request.session_id)
         if not session_state:
-            session_state = {"turn_count": "0", "stage": "questioning", "lang": "ko"}
+            # Redis miss → PostgreSQL에서 실제 stage 복원
+            result = await db.execute(
+                select(ConversationSession).where(
+                    ConversationSession.id == uuid.UUID(request.session_id)
+                )
+            )
+            session_row = result.scalar_one_or_none()
+            if session_row:
+                session_state = {
+                    "turn_count": str(session_row.turn_count),
+                    "stage": session_row.stage,
+                    "lang": session_row.lang or "ko",
+                    "cycle_start_turn": "0",
+                }
+                # Redis 복원
+                await redis_service.set_session_state(request.session_id, session_state)
+                logger.info("[chat] Redis miss → DB에서 stage 복원: %s", session_row.stage)
+            else:
+                session_state = {"turn_count": "0", "stage": "questioning", "lang": "ko"}
 
         turn_count = int(session_state.get("turn_count", 0))
         stage = session_state.get("stage", "questioning")
@@ -218,6 +236,16 @@ async def send_message(
         # structured_facts (context_service v4에서 반환)
         structured_facts = full_context.get("structured_facts", {})
 
+        # image_data(base64) 우선, 없으면 image_url(S3 URL) fallback
+        # base64 data URI는 Qwen이 직접 인식 가능 — 개인 S3 URL 접근 불가 문제 해결
+        effective_image = request.image_data or request.image_url
+        # DB/Redis 저장용: base64는 수십KB → 플레이스홀더로 대체해 bloat 방지
+        image_for_storage = None
+        if request.image_data:
+            image_for_storage = "[이미지]"
+        elif request.image_url:
+            image_for_storage = request.image_url
+
         # Step 7: 프롬프트 구성 (greeting 아닐 때)
         if not is_greeting:
             _system_prompt, messages = prompt_builder_service.build_chat_prompt(
@@ -230,7 +258,7 @@ async def send_message(
                 turn_count=new_turn_count,
                 intent=intent,
                 lang=lang,
-                image_url=request.image_url,
+                image_url=effective_image,
                 mode=request.mode,
                 structured_facts=structured_facts,
                 tool_results=web_results,
@@ -371,11 +399,12 @@ async def send_message(
                 )
 
             # 영속화 — 백그라운드 태스크
+            # image_for_storage: base64는 "[이미지]" 플레이스홀더로 저장 (메모리/로그 bloat 방지)
             user_msg = {
                 "role": "user",
                 "content": request.content,
                 "turn_index": new_turn_count,
-                "image_url": request.image_url,
+                "image_url": image_for_storage,
             }
             ai_content = (
                 full_response

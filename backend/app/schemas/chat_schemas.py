@@ -22,7 +22,8 @@ class SendMessageRequest(BaseModel):
     session_id: str
     pet_id: str
     content: str
-    image_url: str | None = None
+    image_url: str | None = None        # 기존 URL 방식 (하위 호환)
+    image_data: str | None = None       # base64 data URI: "data:image/jpeg;base64,..."
     mode: str = "fast"  # "fast" | "thinking"
 
 

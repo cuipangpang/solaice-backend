@@ -5,11 +5,11 @@
  * - SSE 스트리밍 메시지 (chatService.sendChatMessage)
  * - 진단 결과 카드 (urgency별 색상)
  * - 긴급 상황 전체 화면 Modal
- * - 이미지 첨부 + S3 업로드 (uploadService 재사용)
+ * - 이미지 첨부 → base64 변환 후 Qwen에 직접 전달 (S3 URL 접근 불가 문제 해결)
  * - AbortController로 전송 취소
  */
 
-import { uploadImage } from '@/services/uploadService'
+import { imageToBase64 } from '@/services/uploadService'
 import {
   type ChatMessage,
   type DiagnosisResult,
@@ -178,7 +178,7 @@ export default function ConsultScreen() {
   const [inputText, setInputText] = useState('')
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null)
   const [imageUploading, setImageUploading] = useState(false)
-  const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null)
+  const [pendingImageData, setPendingImageData] = useState<string | null>(null) // base64 data URI
   const [showEmergencyModal, setShowEmergencyModal] = useState(false)
   const [petProfile, setPetProfile] = useState<PetProfile | null>(null)
 
@@ -284,11 +284,11 @@ export default function ConsultScreen() {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      quality: 0.85,
+      quality: 1, // 압축은 imageToBase64에서 처리
     })
     if (result.canceled) return
     setSelectedImageUri(result.assets[0].uri)
-    setPendingImageUrl(null)
+    setPendingImageData(null)
   }
 
   // ── 메시지 전송 ───────────────────────────────────────────
@@ -305,33 +305,33 @@ export default function ConsultScreen() {
 
     Keyboard.dismiss()
 
-    // 이미지 업로드
-    let imageUrl: string | null = pendingImageUrl
-    if (selectedImageUri && !pendingImageUrl) {
+    // 이미지 → base64 변환 (S3 업로드 없이 Qwen에 직접 전달)
+    let imageData: string | null = pendingImageData
+    if (selectedImageUri && !pendingImageData) {
       setImageUploading(true)
       try {
-        imageUrl = await uploadImage(selectedImageUri, 'health-checks', petId)
-        if (imageUrl) setPendingImageUrl(imageUrl)
+        imageData = await imageToBase64(selectedImageUri)
+        setPendingImageData(imageData)
       } catch {
-        Alert.alert('이미지 업로드에 실패했습니다.', '이미지 없이 전송됩니다.')
-        imageUrl = null
+        Alert.alert('이미지 처리에 실패했습니다.', '이미지 없이 전송됩니다.')
+        imageData = null
       } finally {
         setImageUploading(false)
       }
     }
 
-    // 사용자 메시지 추가
+    // 사용자 메시지 추가 (UI 표시용 — 로컬 URI 사용)
     const userMsg: MessageItem = {
       role: 'user',
       content: text || '(이미지)',
-      imageUrl,
+      imageUrl: selectedImageUri,  // 화면 표시는 로컬 URI 사용
       turnIndex: state.turnCount + 1,
       timestamp: new Date().toISOString(),
     }
     dispatch({ type: 'ADD_MESSAGE', message: userMsg })
     setInputText('')
     setSelectedImageUri(null)
-    setPendingImageUrl(null)
+    setPendingImageData(null)
 
     // AbortController
     abortControllerRef.current?.abort()
@@ -344,7 +344,8 @@ export default function ConsultScreen() {
       sessionId: state.sessionId,
       petId,
       content: text || '(이미지)',
-      imageUrl,
+      imageUrl: null,        // S3 URL 사용 안 함
+      imageData,             // base64 data URI — Qwen이 직접 인식
       mode,
       signal: abortControllerRef.current.signal,
       onToken: (token) => {

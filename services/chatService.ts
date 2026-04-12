@@ -77,6 +77,7 @@ export async function sendChatMessage(params: {
   petId: string
   content: string
   imageUrl?: string | null
+  imageData?: string | null   // base64 data URI — S3 URL 대체
   mode?: 'fast' | 'thinking'
   onToken: (token: string) => void
   onDone: (result: {
@@ -89,12 +90,15 @@ export async function sendChatMessage(params: {
   onError: (error: Error) => void
   signal?: AbortSignal
 }): Promise<void> {
-  const { sessionId, petId, content, imageUrl, mode, onToken, onDone, onError, signal } = params
+  const { sessionId, petId, content, imageUrl, imageData, mode, onToken, onDone, onError, signal } = params
 
   return new Promise((resolve) => {
     const url = `${BASE_URL}/chat/message`
     console.log('[chatService] → SSE 요청 URL:', url)
-    console.log('[chatService] → body:', { session_id: sessionId, pet_id: petId, content, mode })
+    console.log('[chatService] → body:', {
+      session_id: sessionId, pet_id: petId, content, mode,
+      has_image: !!(imageData || imageUrl),
+    })
 
     const es = new EventSource(url, {
       headers: { 'Content-Type': 'application/json' },
@@ -104,6 +108,7 @@ export async function sendChatMessage(params: {
         pet_id: petId,
         content,
         image_url: imageUrl ?? null,
+        image_data: imageData ?? null,
         mode: mode ?? 'fast',
       }),
       pollingInterval: 0,
