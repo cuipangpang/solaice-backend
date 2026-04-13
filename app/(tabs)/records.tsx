@@ -23,6 +23,7 @@ import { petService, type PetProfile } from '@/services/petService'
 import { vaccineService, type VaccineRecord } from '@/services/vaccineService'
 import { healthEventService, type HealthEvent, type EventType } from '@/services/healthEventService'
 import { localCache } from '@/utils/storage'
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker'
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
@@ -75,6 +76,29 @@ function isValidDate(s: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(new Date(s).getTime())
 }
 
+/** Date → "YYYY-MM-DD" (백엔드 전송용) */
+function toApiDate(d: Date): string {
+  const y  = d.getFullYear()
+  const m  = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${dd}`
+}
+
+/** Date → "YYYY.MM.DD" (화면 표시용) */
+function toDisplayDate(d: Date): string {
+  const y  = d.getFullYear()
+  const m  = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${y}.${m}.${dd}`
+}
+
+/** 오늘 + 1년 */
+function defaultNextDate(): Date {
+  const d = new Date()
+  d.setFullYear(d.getFullYear() + 1)
+  return d
+}
+
 // ── 主页面 ─────────────────────────────────────────────────────
 
 export default function RecordsScreen() {
@@ -88,13 +112,15 @@ export default function RecordsScreen() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   // ── 건강 이벤트 상태 ──────────────────────────────────────────
-  const [healthEvents,      setHealthEvents]      = useState<HealthEvent[]>([])
-  const [showEventModal,    setShowEventModal]    = useState(false)
-  const [newEventType,      setNewEventType]      = useState<EventType>('vaccine')
-  const [newEventDate,      setNewEventDate]      = useState('')
-  const [newEventNextDate,  setNewEventNextDate]  = useState('')
-  const [newEventNote,      setNewEventNote]      = useState('')
-  const [eventSaving,       setEventSaving]       = useState(false)
+  const [healthEvents,         setHealthEvents]         = useState<HealthEvent[]>([])
+  const [showEventModal,       setShowEventModal]       = useState(false)
+  const [newEventType,         setNewEventType]         = useState<EventType>('vaccine')
+  const [newEventDate,         setNewEventDate]         = useState<Date>(new Date())
+  const [showEventDatePicker,  setShowEventDatePicker]  = useState(false)
+  const [newEventNextDate,     setNewEventNextDate]     = useState<Date | null>(null)
+  const [showNextDatePicker,   setShowNextDatePicker]   = useState(false)
+  const [newEventNote,         setNewEventNote]         = useState('')
+  const [eventSaving,          setEventSaving]          = useState(false)
 
   // ── 表单状态 ─────────────────────────────────────────────────
   const [formName,    setFormName]    = useState('')
@@ -264,21 +290,15 @@ export default function RecordsScreen() {
 
   function openEventModal() {
     setNewEventType('vaccine')
-    setNewEventDate('')
-    setNewEventNextDate('')
+    setNewEventDate(new Date())
+    setShowEventDatePicker(false)
+    setNewEventNextDate(defaultNextDate())
+    setShowNextDatePicker(false)
     setNewEventNote('')
     setShowEventModal(true)
   }
 
   async function handleSaveEvent() {
-    if (!newEventDate.trim() || !isValidDate(newEventDate.trim())) {
-      Alert.alert('날짜 오류', '이벤트 날짜를 YYYY-MM-DD 형식으로 입력해주세요')
-      return
-    }
-    if (newEventNextDate.trim() && !isValidDate(newEventNextDate.trim())) {
-      Alert.alert('날짜 오류', '다음 예정일을 YYYY-MM-DD 형식으로 입력해주세요')
-      return
-    }
     const petId = await localCache.getPetId()
     if (!petId) return
 
@@ -286,9 +306,9 @@ export default function RecordsScreen() {
     try {
       const created = await healthEventService.createHealthEvent(petId, {
         event_type: newEventType,
-        event_date: newEventDate.trim(),
-        next_date:  newEventNextDate.trim() || null,
-        note:       newEventNote.trim()     || null,
+        event_date: toApiDate(newEventDate),
+        next_date:  newEventNextDate ? toApiDate(newEventNextDate) : null,
+        note:       newEventNote.trim() || null,
       })
       setHealthEvents((prev) => [created, ...prev])
       setShowEventModal(false)
@@ -777,29 +797,75 @@ export default function RecordsScreen() {
 
               {/* 이벤트 날짜 */}
               <Text style={styles.fieldLabel}>날짜 *</Text>
-              <TextInput
-                style={styles.textInput}
-                value={newEventDate}
-                onChangeText={setNewEventDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#A0AFC0"
-                keyboardType="numeric"
-                maxLength={10}
-                returnKeyType="next"
-              />
+              <TouchableOpacity
+                style={styles.datePickerTrigger}
+                onPress={() => {
+                  setShowNextDatePicker(false)
+                  setShowEventDatePicker((v) => !v)
+                }}
+                activeOpacity={0.75}
+              >
+                <Text style={styles.datePickerText}>{toDisplayDate(newEventDate)}</Text>
+                <Text style={styles.datePickerIcon}>📅</Text>
+              </TouchableOpacity>
+              {showEventDatePicker && (
+                <DateTimePicker
+                  value={newEventDate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={(_: DateTimePickerEvent, selected?: Date) => {
+                    if (Platform.OS === 'android') setShowEventDatePicker(false)
+                    if (selected) setNewEventDate(selected)
+                  }}
+                  style={styles.datePickerInline}
+                />
+              )}
 
               {/* 다음 예정일 */}
               <Text style={styles.fieldLabel}>다음 예정일 (선택사항)</Text>
-              <TextInput
-                style={styles.textInput}
-                value={newEventNextDate}
-                onChangeText={setNewEventNextDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#A0AFC0"
-                keyboardType="numeric"
-                maxLength={10}
-                returnKeyType="next"
-              />
+              <TouchableOpacity
+                style={styles.datePickerTrigger}
+                onPress={() => {
+                  setShowEventDatePicker(false)
+                  setShowNextDatePicker((v) => !v)
+                  if (!newEventNextDate) setNewEventNextDate(defaultNextDate())
+                }}
+                activeOpacity={0.75}
+              >
+                <Text style={[
+                  styles.datePickerText,
+                  !newEventNextDate && styles.datePickerPlaceholder,
+                ]}>
+                  {newEventNextDate ? toDisplayDate(newEventNextDate) : '선택 안 함'}
+                </Text>
+                <View style={styles.datePickerRightGroup}>
+                  {newEventNextDate && (
+                    <TouchableOpacity
+                      onPress={(e) => {
+                        e.stopPropagation()
+                        setNewEventNextDate(null)
+                        setShowNextDatePicker(false)
+                      }}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Text style={styles.datePickerClear}>✕</Text>
+                    </TouchableOpacity>
+                  )}
+                  <Text style={styles.datePickerIcon}>📅</Text>
+                </View>
+              </TouchableOpacity>
+              {showNextDatePicker && newEventNextDate && (
+                <DateTimePicker
+                  value={newEventNextDate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={(_: DateTimePickerEvent, selected?: Date) => {
+                    if (Platform.OS === 'android') setShowNextDatePicker(false)
+                    if (selected) setNewEventNextDate(selected)
+                  }}
+                  style={styles.datePickerInline}
+                />
+              )}
 
               {/* 메모 */}
               <Text style={styles.fieldLabel}>메모 (선택사항)</Text>
@@ -1358,5 +1424,46 @@ const styles = StyleSheet.create({
     height:     88,
     textAlignVertical: 'top',
     paddingTop: 14,
+  },
+
+  // ── DatePicker 트리거 버튼 ─────────────────────────────────────
+  datePickerTrigger: {
+    backgroundColor:   '#FFFFFF',
+    borderRadius:      14,
+    borderWidth:       1,
+    borderColor:       '#E8EFF6',
+    paddingHorizontal: 16,
+    paddingVertical:   14,
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
+    marginBottom:      20,
+  },
+  datePickerText: {
+    fontFamily: 'RobotoMono_400Regular',
+    fontSize:   15,
+    color:      '#2B3A55',
+  },
+  datePickerPlaceholder: {
+    color: '#A0AFC0',
+    fontFamily: 'Pretendard-Regular',
+  },
+  datePickerIcon: {
+    fontSize: 18,
+  },
+  datePickerRightGroup: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           10,
+  },
+  datePickerClear: {
+    fontFamily: 'Pretendard-Regular',
+    fontSize:   14,
+    color:      '#A0AFC0',
+  },
+  datePickerInline: {
+    marginTop:    -14,   // 버튼과 붙어 보이도록
+    marginBottom: 8,
+    alignSelf:    'stretch',
   },
 })
