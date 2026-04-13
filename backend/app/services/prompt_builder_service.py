@@ -84,22 +84,18 @@ THINKING_SYSTEM_TEMPLATE = """{pinned_context}{prefix}
 
 【출력 언어】 {lang_instruction}"""
 
-# ── 단계 지시문 (기존 그대로) ─────────────────────────────────────────────────
-_STAGE_QUESTIONING = """현재 정보 수집 단계입니다. 매 답변에서 가장 중요한 추가 질문 하나만 하고,
-간단한 초기 안심 멘트를 함께 제공하세요.
-아직 진단 결론을 내리지 마세요. 출력 형식: 일반 텍스트."""
+# ── 단계 지시문 ── chat(기본) / report(명시 요청 시)만 사용 ────────────────────
+_STAGE_CHAT = """반려동물 건강에 관한 질문에 친절하고 자연스럽게 대화하세요.
+출력 형식: 반드시 일반 텍스트. JSON·보고서 형식으로 절대 응답하지 마세요.
+증상 이야기가 나오면 공감하며 추가 정보를 자연스럽게 물어볼 수 있습니다."""
 
-_STAGE_DIAGNOSIS = """현재 진단 단계입니다. 수집된 증상을 바탕으로 구조화된 진단을 제공하세요.
-반드시 유효한 JSON을 출력하세요 (```json 마크 없이), 형식은 다음과 같습니다:
+_STAGE_REPORT = """사용자가 진단 보고서를 요청했습니다. 지금까지 대화한 증상을 바탕으로
+구조화된 진단 보고서를 JSON 형식으로 출력하세요 (```json 마크 없이).
+형식:
 {"urgency":"green|orange|red","primary_diagnosis":"...","symptoms":["..."],
  "action_plan":"...","home_care":"...","follow_up_questions":["..."],
  "rag_sources":["..."]}
-JSON 내 모든 텍스트 값은 한국어로 작성하세요."""
-
-_STAGE_CHAT = """일반 대화 단계입니다. 반려동물 건강에 관한 질문에 친절하고 자연스럽게 답변하세요.
-출력 형식: 반드시 일반 텍스트로만 답변하세요. JSON 형식으로 절대 응답하지 마세요.
-이전 대화에서 진단 보고서(JSON)가 있었더라도 지금은 자연스러운 대화를 이어가세요.
-증상 관련 질문이 언급되면 공감하며 추가 정보를 자연스럽게 물어볼 수 있습니다."""
+JSON 내 모든 값은 한국어로 작성하세요."""
 
 
 # ── 헬퍼 ──────────────────────────────────────────────────────────────────────
@@ -180,12 +176,10 @@ def build_chat_prompt(
         else "없음"
     )
 
-    if stage == "diagnosis":
-        stage_instruction = _STAGE_DIAGNOSIS
-    elif stage in ("chat", "completed"):
-        stage_instruction = _STAGE_CHAT
+    if stage == "report":
+        stage_instruction = _STAGE_REPORT
     else:
-        stage_instruction = _STAGE_QUESTIONING
+        stage_instruction = _STAGE_CHAT
     lang_instruction = (
         "Please respond in English." if lang == "en" else "모든 답변은 한국어로 작성하세요."
     )

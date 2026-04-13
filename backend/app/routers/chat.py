@@ -56,6 +56,18 @@ QWEN_ENDPOINT = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/com
 CHAT_MAX_TURNS: int = int(os.getenv("CHAT_MAX_TURNS", "20"))
 CHAT_SUMMARY_INTERVAL: int = int(os.getenv("CHAT_SUMMARY_INTERVAL", "5"))
 
+# ── 보고서 트리거 키워드 ───────────────────────────────────────
+_REPORT_KEYWORDS = [
+    "진단해줘", "진단해 줘", "진단 해줘",
+    "보고서", "진단 결과", "최종 결론", "종합해줘", "종합 해줘",
+    "정리해줘", "정리 해줘", "분석해줘", "분석 해줘",
+    "판단해줘", "판단 해줘", "결과 알려줘", "어떤 병", "병명", "무슨 병",
+]
+
+def _is_report_requested(message: str) -> bool:
+    """사용자 메시지에 보고서/진단 요청 키워드가 포함되면 True."""
+    return any(kw in message for kw in _REPORT_KEYWORDS)
+
 
 # ── POST /session ─────────────────────────────────────────────
 
@@ -144,9 +156,7 @@ async def send_message(
                 session_state = {"turn_count": "0", "stage": "questioning", "lang": "ko"}
 
         turn_count = int(session_state.get("turn_count", 0))
-        stage = session_state.get("stage", "questioning")
         lang = session_state.get("lang", "ko")
-        cycle_start_turn = int(session_state.get("cycle_start_turn", "0"))
 
         # Step 2: 의도 분류 (<1ms)
         intent_result = await intent_service.classify_intent(request.content, chat_history)
@@ -211,27 +221,9 @@ async def send_message(
             if web_results:
                 logger.info("[chat] Web 검색 결과 포함: %d자", len(web_results))
 
-        # Step 6: turn + stage 결정 (의도 및 현재 stage 기반)
+        # Step 6: turn 카운트 + stage 결정 (키워드 기반, 매 요청 실시간 판단)
         new_turn_count = turn_count + 1
-        new_cycle_start_turn = cycle_start_turn  # 기본값: 변경 없음
-
-        if intent == "greeting":
-            # 인사 → 일반 대화 모드
-            new_stage = "chat"
-        elif stage in ("completed", "chat", "diagnosis"):
-            # 진단 완료 / 일반 대화 / 진단 후 재방문 — intent 기반 재판단
-            # "diagnosis" 포함: follow_up_questions가 있어 completed로 전환 안 된 경우도 처리
-            if intent == "veterinary":
-                # 구체적 수의학 증상 언급 → 새 진단 사이클 시작
-                new_stage = "questioning"
-                new_cycle_start_turn = new_turn_count  # 사이클 리셋
-            else:
-                # greeting/general/기타 → chat 리셋 (JSON 보고서 출력 방지)
-                new_stage = "chat"
-        else:
-            # questioning 단계: cycle 기준 4턴 후 진단
-            cycle_turns = new_turn_count - cycle_start_turn
-            new_stage = "diagnosis" if cycle_turns >= 4 else "questioning"
+        new_stage = "report" if _is_report_requested(request.content) else "chat"
 
         # structured_facts (context_service v4에서 반환)
         structured_facts = full_context.get("structured_facts", {})
@@ -288,7 +280,7 @@ async def send_message(
 
     # ── SSE 스트리밍 제너레이터 ─────────────────────────────────
     async def generate():
-        nonlocal new_turn_count, new_stage, new_cycle_start_turn
+        nonlocal new_turn_count, new_stage
 
         try:
             # greeting 빠른 경로
@@ -331,10 +323,10 @@ async def send_message(
                         except (json.JSONDecodeError, KeyError):
                             continue
 
-            # 결과 파싱
+            # 결과 파싱 — report 요청 시에만 JSON 시도
             urgency = None
             reply_data: str | dict = full_response
-            if new_stage == "diagnosis" and full_response.strip().startswith("{"):
+            if new_stage == "report" and full_response.strip().startswith("{"):
                 try:
                     match_start = full_response.find("{")
                     match_end = full_response.rfind("}") + 1
@@ -343,11 +335,6 @@ async def send_message(
                         urgency = reply_data.get("urgency")  # type: ignore[union-attr]
                 except json.JSONDecodeError:
                     reply_data = full_response
-
-            # 진단 완료 감지: primary_diagnosis 있고 follow_up_questions 없으면 → "completed"
-            if isinstance(reply_data, dict) and reply_data.get("primary_diagnosis"):
-                if not reply_data.get("follow_up_questions"):
-                    new_stage = "completed"
 
             # ── 환각 감지 Layer 1 (동기, <5ms) ────────────────────────
             try:
@@ -427,7 +414,6 @@ async def send_message(
                 turn_count=new_turn_count,
                 stage=new_stage,
                 lang=lang,
-                cycle_start_turn=new_cycle_start_turn,
             )
 
             # 긴급 상황 아카이브
@@ -485,7 +471,6 @@ async def _persist_message_and_update(
     turn_count: int,
     stage: str,
     lang: str,
-    cycle_start_turn: int = 0,
 ) -> None:
     """Redis + PostgreSQL 동시 저장, 세션 상태 업데이트."""
     try:
@@ -496,13 +481,13 @@ async def _persist_message_and_update(
         )
 
         now_iso = datetime.now(timezone.utc).isoformat()
+        # stage는 매 요청 키워드로 실시간 판단하므로 Redis에는 turn_count/lang만 저장
         await redis_service.set_session_state(
             session_id,
             {
                 "turn_count": str(turn_count),
-                "stage": stage,
+                "stage": "chat",   # 항상 chat으로 초기화, 실제 stage는 키워드로 결정
                 "lang": lang,
-                "cycle_start_turn": str(cycle_start_turn),
                 "last_updated": now_iso,
             },
         )
