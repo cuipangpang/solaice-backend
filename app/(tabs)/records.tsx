@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { healthRecordService, type HealthRecord, type HealthStats } from '@/services/healthRecordService'
 import { petService, type PetProfile } from '@/services/petService'
 import { vaccineService, type VaccineRecord } from '@/services/vaccineService'
+import { healthEventService, type HealthEvent, type EventType } from '@/services/healthEventService'
 import { localCache } from '@/utils/storage'
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
@@ -46,6 +47,34 @@ const URGENCY_TEXT: Record<string, string> = {
   normal: '#1A3A5C', caution: '#5A4000', visit: '#5C1A0F', emergency: '#FFFFFF',
 }
 
+const EVENT_EMOJI: Record<EventType, string> = {
+  vaccine:  '💉',
+  birthday: '🎂',
+  grooming: '✂️',
+  hospital: '🏥',
+}
+
+const EVENT_LABEL: Record<EventType, string> = {
+  vaccine:  '예방접종',
+  birthday: '생일',
+  grooming: '미용',
+  hospital: '병원',
+}
+
+const ALL_EVENT_TYPES: EventType[] = ['vaccine', 'birthday', 'grooming', 'hospital']
+
+function daysUntil(dateStr: string): number {
+  const target = new Date(dateStr)
+  const today  = new Date()
+  today.setHours(0, 0, 0, 0)
+  target.setHours(0, 0, 0, 0)
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000)
+}
+
+function isValidDate(s: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(new Date(s).getTime())
+}
+
 // ── 主页面 ─────────────────────────────────────────────────────
 
 export default function RecordsScreen() {
@@ -57,6 +86,15 @@ export default function RecordsScreen() {
   const [showModal, setShowModal] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+
+  // ── 건강 이벤트 상태 ──────────────────────────────────────────
+  const [healthEvents,      setHealthEvents]      = useState<HealthEvent[]>([])
+  const [showEventModal,    setShowEventModal]    = useState(false)
+  const [newEventType,      setNewEventType]      = useState<EventType>('vaccine')
+  const [newEventDate,      setNewEventDate]      = useState('')
+  const [newEventNextDate,  setNewEventNextDate]  = useState('')
+  const [newEventNote,      setNewEventNote]      = useState('')
+  const [eventSaving,       setEventSaving]       = useState(false)
 
   // ── 表单状态 ─────────────────────────────────────────────────
   const [formName,    setFormName]    = useState('')
@@ -82,11 +120,12 @@ export default function RecordsScreen() {
         return
       }
 
-      const [petData, recordsData, vaccinesData, statsData] = await Promise.all([
+      const [petData, recordsData, vaccinesData, statsData, eventsData] = await Promise.all([
         petService.getPet(petId),
         healthRecordService.getHealthRecords(petId),
         vaccineService.getVaccineRecords(petId),
         healthRecordService.getHealthStats(petId),
+        healthEventService.getHealthEvents(petId).catch(() => [] as HealthEvent[]),
       ])
 
       setPet(petData)
@@ -94,6 +133,7 @@ export default function RecordsScreen() {
       setRecords(recordsData)
       setVaccines(vaccinesData)
       setStats(statsData)
+      setHealthEvents(eventsData)
       setState('loaded')
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
@@ -220,6 +260,69 @@ export default function RecordsScreen() {
     }
   }
 
+  // ── 건강 이벤트 ──────────────────────────────────────────────
+
+  function openEventModal() {
+    setNewEventType('vaccine')
+    setNewEventDate('')
+    setNewEventNextDate('')
+    setNewEventNote('')
+    setShowEventModal(true)
+  }
+
+  async function handleSaveEvent() {
+    if (!newEventDate.trim() || !isValidDate(newEventDate.trim())) {
+      Alert.alert('날짜 오류', '이벤트 날짜를 YYYY-MM-DD 형식으로 입력해주세요')
+      return
+    }
+    if (newEventNextDate.trim() && !isValidDate(newEventNextDate.trim())) {
+      Alert.alert('날짜 오류', '다음 예정일을 YYYY-MM-DD 형식으로 입력해주세요')
+      return
+    }
+    const petId = await localCache.getPetId()
+    if (!petId) return
+
+    setEventSaving(true)
+    try {
+      const created = await healthEventService.createHealthEvent(petId, {
+        event_type: newEventType,
+        event_date: newEventDate.trim(),
+        next_date:  newEventNextDate.trim() || null,
+        note:       newEventNote.trim()     || null,
+      })
+      setHealthEvents((prev) => [created, ...prev])
+      setShowEventModal(false)
+    } catch (err) {
+      Alert.alert('저장 실패', err instanceof Error ? err.message : '다시 시도해 주세요')
+    } finally {
+      setEventSaving(false)
+    }
+  }
+
+  async function handleDeleteEvent(event: HealthEvent) {
+    Alert.alert(
+      '기록 삭제',
+      `이 ${EVENT_LABEL[event.event_type]} 기록을 삭제할까요?`,
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: async () => {
+            const petId = await localCache.getPetId()
+            if (!petId) return
+            try {
+              await healthEventService.deleteHealthEvent(petId, event.id)
+              setHealthEvents((prev) => prev.filter((e) => e.id !== event.id))
+            } catch {
+              Alert.alert('삭제 실패', '네트워크를 확인 후 다시 시도해주세요')
+            }
+          },
+        },
+      ],
+    )
+  }
+
   // ── 生成就医报告 ──────────────────────────────────────────────
 
   async function handleGenerateReport() {
@@ -264,6 +367,21 @@ export default function RecordsScreen() {
   }
 
   // ── 主内容 ───────────────────────────────────────────────────
+
+  // ── 다가오는 일정 계산 (next_date ≤ 30일 이내) ──────────────
+  const today30 = new Date()
+  today30.setHours(0, 0, 0, 0)
+  const limit30 = new Date(today30)
+  limit30.setDate(limit30.getDate() + 30)
+
+  const upcomingEvents = healthEvents
+    .filter((e) => {
+      if (!e.next_date) return false
+      const nd = new Date(e.next_date)
+      nd.setHours(0, 0, 0, 0)
+      return nd >= today30 && nd <= limit30
+    })
+    .sort((a, b) => new Date(a.next_date!).getTime() - new Date(b.next_date!).getTime())
 
   const speciesKey = (pet?.species as SpeciesKey) in SPECIES_INFO
     ? (pet!.species as SpeciesKey)
@@ -357,6 +475,55 @@ export default function RecordsScreen() {
                 </View>
               </View>
             )}
+
+            {/* ── 다가오는 일정 ─────────────────────────────── */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>다가오는 일정</Text>
+              {upcomingEvents.length === 0 ? (
+                <View style={styles.emptySection}>
+                  <Text style={styles.emptySectionText}>다가오는 일정이 없습니다</Text>
+                </View>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.upcomingScroll}
+                >
+                  {upcomingEvents.map((ev) => {
+                    const days = daysUntil(ev.next_date!)
+                    return (
+                      <View key={ev.id} style={styles.upcomingCard}>
+                        <Text style={styles.upcomingEmoji}>
+                          {EVENT_EMOJI[ev.event_type as EventType] ?? '📅'}
+                        </Text>
+                        <Text style={styles.upcomingLabel}>
+                          {EVENT_LABEL[ev.event_type as EventType] ?? ev.event_type}
+                        </Text>
+                        <Text style={styles.upcomingDays}>
+                          {days === 0 ? 'D-Day' : `D-${days}`}
+                        </Text>
+                        <Text style={styles.upcomingDate}>
+                          {new Date(ev.next_date!).toLocaleDateString('ko-KR', {
+                            month: 'numeric',
+                            day:   'numeric',
+                          })}
+                        </Text>
+                      </View>
+                    )
+                  })}
+                </ScrollView>
+              )}
+            </View>
+
+            {/* ── 기록 추가 버튼 ────────────────────────────── */}
+            <TouchableOpacity
+              style={styles.addEventBtn}
+              onPress={openEventModal}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.addEventBtnIcon}>＋</Text>
+              <Text style={styles.addEventBtnText}>기록 추가</Text>
+            </TouchableOpacity>
 
             {/* ── 검사 기록 ────────────────────────────────── */}
             <View style={styles.section}>
@@ -553,6 +720,110 @@ export default function RecordsScreen() {
                 {formSaving
                   ? <ActivityIndicator size="small" color="#2B3A55" />
                   : <Text style={styles.saveBtnText}>프로필 저장</Text>
+                }
+              </TouchableOpacity>
+            </ScrollView>
+          </SafeAreaView>
+        </KeyboardAvoidingView>
+      </Modal>
+      {/* ── 건강 이벤트 추가 Modal ────────────────────────────── */}
+      <Modal
+        visible={showEventModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => !eventSaving && setShowEventModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            <ScrollView
+              contentContainerStyle={styles.modalScroll}
+              keyboardShouldPersistTaps="handled"
+            >
+              {/* 헤더 */}
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>기록 추가</Text>
+                <TouchableOpacity
+                  onPress={() => setShowEventModal(false)}
+                  disabled={eventSaving}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Text style={styles.modalClose}>취소</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* 이벤트 타입 선택 */}
+              <Text style={styles.fieldLabel}>이벤트 종류</Text>
+              <View style={styles.eventTypeRow}>
+                {ALL_EVENT_TYPES.map((t) => (
+                  <TouchableOpacity
+                    key={t}
+                    style={[styles.eventTypeBtn, newEventType === t && styles.eventTypeBtnActive]}
+                    onPress={() => setNewEventType(t)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={styles.eventTypeBtnEmoji}>{EVENT_EMOJI[t]}</Text>
+                    <Text style={[
+                      styles.eventTypeBtnLabel,
+                      newEventType === t && styles.eventTypeBtnLabelActive,
+                    ]}>
+                      {EVENT_LABEL[t]}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* 이벤트 날짜 */}
+              <Text style={styles.fieldLabel}>날짜 *</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newEventDate}
+                onChangeText={setNewEventDate}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#A0AFC0"
+                keyboardType="numeric"
+                maxLength={10}
+                returnKeyType="next"
+              />
+
+              {/* 다음 예정일 */}
+              <Text style={styles.fieldLabel}>다음 예정일 (선택사항)</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newEventNextDate}
+                onChangeText={setNewEventNextDate}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#A0AFC0"
+                keyboardType="numeric"
+                maxLength={10}
+                returnKeyType="next"
+              />
+
+              {/* 메모 */}
+              <Text style={styles.fieldLabel}>메모 (선택사항)</Text>
+              <TextInput
+                style={[styles.textInput, styles.textInputMulti]}
+                value={newEventNote}
+                onChangeText={setNewEventNote}
+                placeholder="메모를 입력하세요"
+                placeholderTextColor="#A0AFC0"
+                multiline
+                numberOfLines={3}
+                returnKeyType="done"
+              />
+
+              {/* 저장 버튼 */}
+              <TouchableOpacity
+                style={[styles.saveBtn, eventSaving && styles.saveBtnDisabled]}
+                onPress={handleSaveEvent}
+                disabled={eventSaving}
+                activeOpacity={0.8}
+              >
+                {eventSaving
+                  ? <ActivityIndicator size="small" color="#2B3A55" />
+                  : <Text style={styles.saveBtnText}>저장</Text>
                 }
               </TouchableOpacity>
             </ScrollView>
@@ -985,4 +1256,107 @@ const styles = StyleSheet.create({
   },
 
   bottomPad: { height: 100 },
+
+  // ── 다가오는 일정 ─────────────────────────────────────────────
+  upcomingScroll: {
+    paddingRight: 4,
+    gap: 10,
+  },
+  upcomingCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius:    18,
+    padding:         16,
+    width:           110,
+    alignItems:      'center',
+    shadowColor:     '#BDE0FE',
+    shadowOffset:    { width: 0, height: 3 },
+    shadowOpacity:   0.22,
+    shadowRadius:    10,
+    elevation:       2,
+  },
+  upcomingEmoji: {
+    fontSize:     26,
+    marginBottom: 6,
+  },
+  upcomingLabel: {
+    fontFamily:   'Pretendard-Medium',
+    fontSize:     12,
+    color:        '#2B3A55',
+    marginBottom: 6,
+    textAlign:    'center',
+  },
+  upcomingDays: {
+    fontFamily:   'RobotoMono_400Regular',
+    fontSize:     15,
+    color:        '#90CAF9',
+    marginBottom: 4,
+  },
+  upcomingDate: {
+    fontFamily: 'Pretendard-Regular',
+    fontSize:   11,
+    color:      '#A0AFC0',
+  },
+
+  // ── 기록 추가 버튼 ────────────────────────────────────────────
+  addEventBtn: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    justifyContent:  'center',
+    backgroundColor: 'rgba(189,224,254,0.20)',
+    borderRadius:    16,
+    borderWidth:     1,
+    borderColor:     'rgba(189,224,254,0.55)',
+    borderStyle:     'dashed',
+    paddingVertical: 14,
+    marginBottom:    20,
+    gap:             6,
+  },
+  addEventBtnIcon: {
+    fontFamily: 'Pretendard-Regular',
+    fontSize:   20,
+    color:      '#90CAF9',
+    lineHeight: 22,
+  },
+  addEventBtnText: {
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize:   14,
+    color:      '#2B3A55',
+  },
+
+  // ── 이벤트 타입 선택 ──────────────────────────────────────────
+  eventTypeRow: {
+    flexDirection: 'row',
+    gap:           8,
+    marginBottom:  20,
+  },
+  eventTypeBtn: {
+    flex:            1,
+    paddingVertical: 12,
+    borderRadius:    14,
+    backgroundColor: '#FFFFFF',
+    alignItems:      'center',
+    borderWidth:     1,
+    borderColor:     '#E8EFF6',
+  },
+  eventTypeBtnActive: {
+    borderColor:     '#90CAF9',
+    backgroundColor: 'rgba(144,202,249,0.12)',
+  },
+  eventTypeBtnEmoji: {
+    fontSize:     22,
+    marginBottom: 4,
+  },
+  eventTypeBtnLabel: {
+    fontFamily: 'Pretendard-Medium',
+    fontSize:   11,
+    color:      '#7A8DA3',
+  },
+  eventTypeBtnLabelActive: { color: '#1A3A5C' },
+
+  // ── multiline TextInput ───────────────────────────────────────
+  textInputMulti: {
+    height:     88,
+    textAlignVertical: 'top',
+    paddingTop: 14,
+  },
 })
