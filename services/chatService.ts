@@ -12,6 +12,15 @@ import EventSource from 'react-native-sse'
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
+// ── thinking_process 필터 (모듈 레벨) ────────────────────────
+/**
+ * <thinking_process>...</thinking_process> 블록 전체 제거.
+ * 닫힌 블록만 제거하므로 스트리밍 도중 호출해도 안전.
+ */
+function stripThinkingProcess(text: string): string {
+  return text.replace(/<thinking_process>[\s\S]*?<\/thinking_process>\n?/gi, '')
+}
+
 // ── 타입 정의 ─────────────────────────────────────────────────
 
 export interface ChatMessage {
@@ -92,11 +101,6 @@ export async function sendChatMessage(params: {
 }): Promise<void> {
   const { sessionId, petId, content, imageUrl, imageData, mode, onToken, onDone, onError, signal } = params
 
-  // <thinking_process>...</thinking_process> 블록을 UI에서 제거
-  function stripThinking(text: string): string {
-    return text.replace(/<thinking_process>[\s\S]*?<\/thinking_process>/gi, '').trim()
-  }
-
   return new Promise((resolve) => {
     const url = `${BASE_URL}/chat/message`
     console.log('[chatService] → SSE 요청 URL:', url)
@@ -105,7 +109,9 @@ export async function sendChatMessage(params: {
       has_image: !!(imageData || imageUrl),
     })
 
-    // 스트리밍 thinking 필터링 상태
+    // ── 스트리밍 thinking 필터링 상태 머신 ──────────────────
+    // tokenAccum: LLM이 출력한 원문 전체 누적
+    // displayedLen: 이미 onToken으로 전달한 displayable 문자 수
     let tokenAccum = ''
     let displayedLen = 0
 
@@ -132,21 +138,35 @@ export async function sendChatMessage(params: {
         const parsed = JSON.parse(event.data)
 
         if (parsed.type === 'token') {
-          // <thinking_process> 블록이 완성될 때까지 누적 후 필터링
           tokenAccum += parsed.content ?? ''
-          // 완성된 thinking 블록 제거 + 아직 열려있는 태그 이후 숨김
-          const displayable = stripThinking(tokenAccum)
-            .replace(/<thinking_process>[\s\S]*$/i, '')
-          const newPart = displayable.slice(displayedLen)
-          if (newPart) {
-            displayedLen = displayable.length
-            onToken(newPart)
+
+          // ── 상태 머신: open/closed thinking 블록 판단 ────
+          const hasOpenTag = /<thinking_process>/i.test(tokenAccum)
+          const hasCloseTag = /<\/thinking_process>/i.test(tokenAccum)
+          const insideThinking = hasOpenTag && !hasCloseTag
+
+          let displayable: string
+          if (insideThinking) {
+            // 열린 thinking 블록 내부 — 태그 시작 이전 텍스트만 표시
+            displayable = tokenAccum.replace(/<thinking_process>[\s\S]*$/i, '')
+          } else {
+            // 닫힌 블록(완전) 또는 thinking 없음 — 완성된 블록 제거
+            displayable = stripThinkingProcess(tokenAccum)
           }
+          // 부분 opening 태그(예: "<thinking_") 도 숨김
+          displayable = displayable.replace(/<[a-zA-Z_]*$/g, '')
+
+          if (displayable.length > displayedLen) {
+            onToken(displayable.slice(displayedLen))
+            displayedLen = displayable.length
+          }
+
         } else if (parsed.type === 'done') {
-          // reply 변환 (snake_case → camelCase) + thinking 블록 제거
-          let reply: string | DiagnosisResult =
-            typeof parsed.reply === 'string' ? stripThinking(parsed.reply) : parsed.reply
-          if (typeof parsed.reply === 'object' && parsed.reply !== null) {
+          // ── done: reply에서 thinking 블록 제거 후 변환 ───
+          let reply: string | DiagnosisResult
+          if (typeof parsed.reply === 'string') {
+            reply = stripThinkingProcess(parsed.reply)
+          } else if (typeof parsed.reply === 'object' && parsed.reply !== null) {
             reply = {
               urgency: parsed.reply.urgency,
               primaryDiagnosis: parsed.reply.primary_diagnosis ?? '',
@@ -156,6 +176,8 @@ export async function sendChatMessage(params: {
               followUpQuestions: parsed.reply.follow_up_questions ?? [],
               ragSources: parsed.reply.rag_sources ?? parsed.rag_sources ?? [],
             } as DiagnosisResult
+          } else {
+            reply = ''
           }
           onDone({
             reply,
