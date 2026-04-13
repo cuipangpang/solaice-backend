@@ -18,6 +18,7 @@ import {
   sendChatMessage,
 } from '@/services/chatService'
 import { localCache } from '@/utils/storage'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { petService, type PetProfile } from '@/services/petService'
 import { startRecording, stopRecording, transcribeAudio } from '@/utils/audioRecorder'
 import { Ionicons } from '@expo/vector-icons'
@@ -180,6 +181,7 @@ export default function ConsultScreen() {
   const [imageUploading, setImageUploading] = useState(false)
   const [pendingImageData, setPendingImageData] = useState<string | null>(null) // base64 data URI
   const [showEmergencyModal, setShowEmergencyModal] = useState(false)
+  const [showAiConsent,     setShowAiConsent]     = useState(false)
   const [petProfile, setPetProfile] = useState<PetProfile | null>(null)
 
   // ── 새 상태 ───────────────────────────────────────────────
@@ -295,6 +297,14 @@ export default function ConsultScreen() {
   async function handleSend() {
     const text = inputText.trim()
     if (!text && !selectedImageUri) return
+
+    // AI 외부 서비스 전송 동의 확인 (최초 1회)
+    const consented = await AsyncStorage.getItem('ai_consent_accepted')
+    if (!consented) {
+      setShowAiConsent(true)
+      return
+    }
+
     if (!state.sessionId) {
       Alert.alert('오류', '상담 세션이 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.')
       return
@@ -417,6 +427,14 @@ export default function ConsultScreen() {
         }
       },
     })
+  }
+
+  // ── AI 동의 후 재전송 ────────────────────────────────────
+  async function handleAiConsentAccept() {
+    await AsyncStorage.setItem('ai_consent_accepted', 'true')
+    setShowAiConsent(false)
+    // 동의 후 바로 메시지 전송 재시도
+    handleSend()
   }
 
   // ── 전송 취소 ───────────────────────────────────────────
@@ -768,6 +786,40 @@ export default function ConsultScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* ── AI 서비스 이용 동의 Modal ──────────────────────────── */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={showAiConsent}
+        statusBarTranslucent
+        onRequestClose={() => setShowAiConsent(false)}
+      >
+        <View style={styles.consentOverlay}>
+          <View style={styles.consentCard}>
+            <Text style={styles.consentTitle}>AI 서비스 이용 안내</Text>
+            <Text style={styles.consentBody}>
+              이 앱은 AI 상담 시 입력하신 내용(반려동물 정보,{'\n'}
+              사진, 대화 내용)을 외부 AI 서비스(Qwen)로{'\n'}
+              전송합니다. 계속하시겠습니까?
+            </Text>
+            <View style={styles.consentBtnRow}>
+              <Pressable
+                style={({ pressed }) => [styles.consentBtnCancel, pressed && { opacity: 0.7 }]}
+                onPress={() => setShowAiConsent(false)}
+              >
+                <Text style={styles.consentBtnCancelText}>취소</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.consentBtnAccept, pressed && { opacity: 0.7 }]}
+                onPress={handleAiConsentAccept}
+              >
+                <Text style={styles.consentBtnAcceptText}>동의합니다</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
@@ -1061,4 +1113,77 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emergencyConfirmText: { fontFamily: 'Pretendard-SemiBold', fontSize: 16, color: '#FFFFFF' },
+
+  // ── AI 동의 Modal ─────────────────────────────────────────
+  consentOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  consentCard: {
+    backgroundColor: '#FAFCFF',
+    borderRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 24,
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  consentTitle: {
+    fontFamily: 'NotoSerifKR_700Bold',
+    fontSize: 18,
+    color: '#2B3A55',
+    marginBottom: 14,
+  },
+  consentBody: {
+    fontFamily: 'Pretendard-Regular',
+    fontSize: 14,
+    color: '#4A5A70',
+    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  consentBtnRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+  },
+  consentBtnCancel: {
+    flex: 1,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F0F4F8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  consentBtnCancelText: {
+    fontFamily: 'Pretendard-Medium',
+    fontSize: 15,
+    color: '#7A8DA3',
+  },
+  consentBtnAccept: {
+    flex: 2,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#BDE0FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#BDE0FE',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  consentBtnAcceptText: {
+    fontFamily: 'Pretendard-SemiBold',
+    fontSize: 15,
+    color: '#2B3A55',
+  },
 })
