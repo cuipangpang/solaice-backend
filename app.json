@@ -19,7 +19,8 @@
       "infoPlist": {
         "NSCameraUsageDescription": "반려동물의 건강 상태를 AI로 분석하기 위해 카메라를 사용합니다.",
         "NSMicrophoneUsageDescription": "반려동물 소리를 번역하기 위해 마이크를 사용합니다.",
-        "NSPhotoLibraryUsageDescription": "반려동물 사진을 업로드하여 건강을 분석합니다."
+        "NSPhotoLibraryUsageDescription": "반려동물 사진을 업로드하여 건강을 분석합니다.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -43,6 +44,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2d29c6c3-8c5a-4c80-a1ff-f29fd50da61d"
+      }
     }
   }
 }

@@ -40,7 +40,7 @@ async def upload_avatar(pet_id: str, file: UploadFile = File(...)):
     with open(filepath, "wb") as f:
         f.write(content)
 
-    base_url = os.getenv("BASE_URL", "http://43.164.134.43:8000")
+    base_url = os.getenv("BASE_URL", "https://api.solaice.org")
     avatar_url = f"{base_url}/uploads/avatars/{filename}"
 
     return JSONResponse({
