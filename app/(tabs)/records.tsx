@@ -64,6 +64,22 @@ const EVENT_LABEL: Record<EventType, string> = {
 
 const ALL_EVENT_TYPES: EventType[] = ['vaccine', 'birthday', 'grooming', 'hospital']
 
+const MODULE_LABELS: Record<string, string> = {
+  skin:       '피부',
+  oral:       '구강',
+  eye:        '눈',
+  ear:        '귀',
+  excrement:  '대변',
+  vomit:      '구토물',
+  '皮肤':     '피부',
+  '口腔':     '구강',
+  '眼睛':     '눈',
+  '耳朵':     '귀',
+  '粪便':     '대변',
+  '呕吐物':   '구토물',
+  chat:       'AI 상담',
+}
+
 function daysUntil(dateStr: string): number {
   const target = new Date(dateStr)
   const today  = new Date()
@@ -300,20 +316,27 @@ export default function RecordsScreen() {
 
   async function handleSaveEvent() {
     const petId = await localCache.getPetId()
-    if (!petId) return
+    if (!petId) {
+      Alert.alert('오류', '반려동물 정보를 불러올 수 없습니다. 다시 시도해 주세요.')
+      return
+    }
+
+    const formData = {
+      event_type: newEventType,
+      event_date: toApiDate(newEventDate),
+      next_date:  newEventNextDate ? toApiDate(newEventNextDate) : null,
+      note:       newEventNote.trim() || null,
+    }
+    console.log('저장 시작', formData)
 
     setEventSaving(true)
     try {
-      const created = await healthEventService.createHealthEvent(petId, {
-        event_type: newEventType,
-        event_date: toApiDate(newEventDate),
-        next_date:  newEventNextDate ? toApiDate(newEventNextDate) : null,
-        note:       newEventNote.trim() || null,
-      })
+      const created = await healthEventService.createHealthEvent(petId, formData)
       setHealthEvents((prev) => [created, ...prev])
       setShowEventModal(false)
     } catch (err) {
-      Alert.alert('저장 실패', err instanceof Error ? err.message : '다시 시도해 주세요')
+      console.log('저장 실패', err)
+      Alert.alert('오류', err instanceof Error ? err.message : '저장에 실패했어요')
     } finally {
       setEventSaving(false)
     }
@@ -556,7 +579,7 @@ export default function RecordsScreen() {
                 records.slice(0, 10).map((r) => (
                   <View key={r.id} style={styles.recordCard}>
                     <View style={styles.recordCardTop}>
-                      <Text style={styles.recordModule}>{r.module_label}</Text>
+                      <Text style={styles.recordModule}>{MODULE_LABELS[r.module] ?? MODULE_LABELS[r.module_label] ?? r.module_label}</Text>
                       <View style={styles.recordCardTopRight}>
                         <View style={[
                           styles.urgencyBadge,
